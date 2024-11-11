@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SynergyPro Dashboard{% endblock %}</title>
+    <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
+    
+    <!-- Third-party CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Base Dashboard Styles -->
+    <link rel="stylesheet" href="{% static 'css/dashboards/base_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboards/components.css' %}">
+    
+    <!-- Role-specific Styles -->
+    {% if user.user_type == 'individual' and user.profile_type == 'student' %}
+        <link rel="stylesheet" href="{% static 'css/dashboards/student_dashboard.css' %}">
+    {% elif user.user_type == 'individual' and user.profile_type == 'freelancer' %}
+        <link rel="stylesheet" href="{% static 'css/dashboards/freelancer_dashboard.css' %}">
+    {% elif user.user_type == 'team' %}
+        <link rel="stylesheet" href="{% static 'css/dashboards/team_dashboard.css' %}">
+    {% endif %}
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="dashboard-bg min-h-screen text-gray-200">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        {% include 'task_management/dashboards/components/sidebar.html' %}
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            {% include 'task_management/dashboards/components/header.html' %}
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast/Notification Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50"></div>
+
+    <!-- Core Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Dashboard Core Scripts -->
+    <script src="{% static 'js/dashboards/dashboard_core.js' %}"></script>
+    <script src="{% static 'js/components/sidebar.js' %}"></script>
+    <script src="{% static 'js/components/notifications.js' %}"></script>
+    
+    <!-- Task Management -->
+    <script src="{% static 'js/components/task_manager.js' %}"></script>
+    
+    <!-- Additional Components -->
+    <script src="{% static 'js/dashboards/charts.js' %}"></script>
+    <script src="{% static 'js/dashboards/calendar.js' %}"></script>
+    
+    <!-- Initialize AOS -->
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease',
+            once: true
+        });
+    </script>
+
+    <!-- Dashboard Initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the core dashboard
+            window.dashboard = new DashboardCore();
+            
+            // Initialize task manager if needed
+            if (document.querySelector('#task-container')) {
+                window.taskManager = new TaskManager();
+            }
+            
+            // Initialize role-specific features
+            {% if user.user_type == 'team' %}
+                // Team-specific initializations
+                if (document.querySelector('#team-chat')) {
+                    initializeTeamChat();
+                }
+            {% endif %}
+        });
+        
+        // Handle sidebar toggle for mobile
+        const sidebarToggle = document.querySelector('#sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-hidden');
+            });
+        }
+        
+        // Handle notifications
+        function showNotification(message, type = 'info') {
+            if (window.dashboard && window.dashboard.notifications) {
+                window.dashboard.notifications.show({
+                    message: message,
+                    type: type,
+                    duration: 3000
+                });
+            }
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!-- sidebar.html -->
+{% load static %}
+<aside class="w-64 glass-effect border-r border-gray-800">
+    <div class="p-6">
+        <div class="flex items-center space-x-4">
+            <img src="{% static 'images/logo.png' %}" alt="SynergyPro" class="w-8 h-8">
+            <h1 class="text-xl font-bold gradient-text">SynergyPro</h1>
+        </div>
+    </div>
+    <nav class="mt-6">
+        <div class="px-4 space-y-2">
+            {% block sidebar_items %}
+            <!-- Will be overridden by specific dashboards -->
+            {% endblock %}
+        </div>
+    </nav>
+</aside>

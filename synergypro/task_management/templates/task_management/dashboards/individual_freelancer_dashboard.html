@@ -1,0 +1,75 @@
+<!-- individual_freelancer_dashboard.html -->
+{% extends 'task_management/dashboards/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Freelancer Dashboard - SynergyPro{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Active Projects</h3>
+            <p class="text-3xl font-bold gradient-text">4</p>
+            <p class="text-sm text-gray-400 mt-1">In Progress</p>
+        </div>
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Hours Logged</h3>
+            <p class="text-3xl font-bold gradient-text">28.5</p>
+            <p class="text-sm text-gray-400 mt-1">This Week</p>
+        </div>
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Upcoming Deadlines</h3>
+            <p class="text-3xl font-bold gradient-text">3</p>
+            <p class="text-sm text-gray-400 mt-1">Next 7 Days</p>
+        </div>
+    </div>
+
+    <!-- Project Overview -->
+    <div class="glass-effect rounded-xl p-6 border border-gray-800">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold">Active Projects</h2>
+            <button class="px-4 py-2 rounded-lg gradient-bg text-white">
+                <i class="fas fa-plus mr-2"></i>New Project
+            </button>
+        </div>
+        <div class="space-y-4">
+            <!-- Project Items -->
+            <div class="bg-gray-800 bg-opacity-40 rounded-lg p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h4 class="font-semibold">Website Redesign</h4>
+                        <p class="text-sm text-gray-400">Client: TechCorp</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 text-xs rounded bg-pink-500 bg-opacity-20 text-pink-300">
+                            In Progress
+                        </span>
+                        <button class="text-gray-400 hover:text-purple-400">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between text-sm text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>75%</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-2">
+                        <div class="gradient-bg h-2 rounded-full" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- More project items... -->
+        </div>
+    </div>
+
+    <!-- Time Tracking -->
+    <div class="glass-effect rounded-xl p-6 border border-gray-800">
+        <h2 class="text-xl font-semibold mb-6">Time Tracking</h2>
+        <div class="grid grid-cols-7 gap-4">
+            <!-- Time tracking widget here -->
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+<!-- team_hr_dashboard.html -->
+{% extends 'task_management/dashboards/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}HR Dashboard - SynergyPro{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Total Employees</h3>
+            <p class="text-3xl font-bold gradient-text">248</p>
+            <p class="text-sm text-gray-400 mt-1">Active</p>
+        </div>
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">New Hires</h3>
+            <p class="text-3xl font-bold gradient-text">12</p>
+            <p class="text-sm text-gray-400 mt-1">This Month</p>
+        </div>
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Pending Reviews</h3>
+            <p class="text-3xl font-bold gradient-text">8</p>
+            <p class="text-sm text-gray-400 mt-1">To Complete</p>
+        </div>
+        <div class="glass-effect rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-semibold mb-2">Training Programs</h3>
+            <p class="text-3xl font-bold gradient-text">5</p>
+            <p class="text-sm text-gray-400 mt-1">Active</p>
+        </div>
+    </div>
+
+    <!-- HR Tasks Overview -->
+    <div class="glass-effect rounded-xl p-6 border border-gray-800">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold">HR Tasks Overview</h2>
+            <div class="flex space-x-2">
+                <button class="px-4 py-2 rounded-lg text-gray-300 hover:text-white">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+                <button class="px-4 py-2 rounded-lg gradient-bg text-white">
+                    <i class="fas fa-plus mr-2"></i>New Task
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Onboarding Tasks -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Onboarding Tasks</h3>
+                <div class="bg-gray-800 bg-opacity-40 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold">New Employee Orientation</h4>
+                            <p class="text-sm text-gray-400">5 Employees</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded bg-green-500 bg-opacity-20 text-green-300">
+                            This Week
+                        </span>
+                    </div>
+                </div>
+                <!-- More onboarding tasks... -->
+            </div>
+            <!-- Training Programs -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Active Training Programs</h3>
+                <!-- Training items... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Overview -->
+    <div class="glass-effect rounded-xl p-6 border border-gray-800">
+        <h2 class="text-xl font-semibold mb-6">Employee Overview</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Department Distribution -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Department Distribution</h3>
+                <!-- Department chart here -->
+            </div>
+            <!-- Recent Activities -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-semibold">Recent Activities</h3>
+                <!-- Activity feed... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar Events -->
+    <div class="glass-effect rounded-xl p-6 border border-gray-800">
+        <h2 class="text-xl font-semibold mb-6">Upcoming Events</h2>
+        <div class="space-y-4">
+            <!-- Calendar events here -->
+        </div>
+    </div>
+</div>
+{% endblock %}

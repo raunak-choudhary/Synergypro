@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynergyPro - Task Management & Productivity Platform</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">SynergyPro</div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home">
+            <h1>Welcome to SynergyPro</h1>
+            <p>The Task Management & Productivity Platform</p>
+            <div class="cta-buttons">
+                <button onclick="showLoginForm()">Login</button>
+                <button onclick="showSignupForm()">Sign Up</button>
+            </div>
+        </section>
+
+        <section id="features">
+            <h2>Key Features</h2>
+            <ul>
+                <li>Integrated Task Management</li>
+                <li>Personalized Study Scheduling</li>
+                <li>Smart Prioritization</li>
+                <li>Real-time Collaboration</li>
+                <li>Progress Tracking</li>
+            </ul>
+        </section>
+
+        <section id="about">
+            <h2>About SynergyPro</h2>
+            <p>SynergyPro is a unified solution for professionals and students, designed to balance work and study commitments effectively. Our platform helps you optimize your time, improve productivity, and achieve your goals efficiently.</p>
+        </section>
+    </main>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('login-modal')">&times;</span>
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('signup-modal')">&times;</span>
+            <h2>Sign Up</h2>
+            <form id="signup-form">
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" placeholder="Confirm Password" required>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 SynergyPro. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
