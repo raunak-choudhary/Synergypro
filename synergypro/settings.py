@@ -29,6 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Application definition
 
@@ -59,7 +62,9 @@ ROOT_URLCONF = "synergypro.urls"
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'task_management', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,9 +92,9 @@ DATABASES = {
 
 # Authentication Settings
 AUTH_USER_MODEL = 'task_management.CustomUser'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = 'dashboard_router'
+LOGOUT_REDIRECT_URL = '/'
 
 # Static files configuration
 STATIC_URL = '/static/'
@@ -97,10 +102,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'task_management', 'static'),
 ]
-
-# Media files configuration
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Password validation

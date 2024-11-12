@@ -1,4 +1,7 @@
 <!-- quick_actions.html -->
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboards/components.css' %}">
+{% endblock %}
 <div class="flex space-x-4 mb-6">
     {% block quick_actions %}
     <!-- Will be overridden by specific dashboards -->

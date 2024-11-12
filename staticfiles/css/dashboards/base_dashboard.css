@@ -1,0 +1,66 @@
+/* base_dashboard.css */
+:root {
+    --gradient-start: #8B5CF6;
+    --gradient-end: #EC4899;
+    --background-dark: #1a1a2e;
+    --background-darker: #151525;
+    --glass-bg: rgba(31, 31, 50, 0.3);
+    --border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-bg {
+    background: linear-gradient(135deg, var(--background-dark), var(--background-darker));
+    min-height: 100vh;
+}
+
+.glass-effect {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+}
+
+.gradient-text {
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.gradient-bg {
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+}
+
+.gradient-border {
+    border-image: linear-gradient(to right, var(--gradient-start), var(--gradient-end)) 1;
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Layout components */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    min-height: 100vh;
+}
+
+.main-content {
+    padding: 2rem;
+    overflow-y: auto;
+}

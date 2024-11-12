@@ -586,14 +586,16 @@ section {
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     display: none;
-    z-index: 1000;
+    z-index: 9999;
     font-size: 16px;
     opacity: 0;
     transition: opacity 0.3s ease-in;
+    pointer-events: none; 
 }
 
 .toast.show {
     opacity: 1;
+    display: block;
 }
 
 .toast.hide {
@@ -607,10 +609,13 @@ section {
     height: 4px;
     background-color: #239b56; 
     transition: width 0.05s linear;
+    z-index: 10000;
 }
 
 .toast-message i {
     margin-right: 5px;
+    position: relative;
+    z-index: 10000;
 }
 
 /* Modal Styles */
@@ -627,6 +632,7 @@ section {
 }
 
 .modal-content {
+    z-index: 1002;
     background-color: #fefefe;
     margin: 2vh auto;
     padding: 30px;
@@ -1087,7 +1093,7 @@ section {
 .welcome-modal {
     display: none;
     position: fixed;
-    z-index: 9999;
+    z-index: 9998;
     left: 0;
     top: 0;
     width: 100%;

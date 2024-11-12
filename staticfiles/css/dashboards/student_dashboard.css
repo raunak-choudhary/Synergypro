@@ -1,0 +1,38 @@
+/* student_dashboard.css */
+.study-timer {
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+}
+
+.study-timer .timer-display {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.assignment-card {
+    border-left: 4px solid transparent;
+    border-image: linear-gradient(to bottom, var(--gradient-start), var(--gradient-end)) 1;
+}
+
+.study-progress-chart {
+    height: 200px;
+    margin: 1rem 0;
+}
+
+.subject-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    background: rgba(139, 92, 246, 0.2);
+    color: #c4b5fd;
+}
+
+.deadline-alert {
+    background: rgba(239, 68, 68, 0.2);
+    border-left: 4px solid #ef4444;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    border-radius: 0.5rem;
+}

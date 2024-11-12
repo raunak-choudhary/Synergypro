@@ -260,18 +260,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('login-username').value,
+                password: document.getElementById('login-password').value
+            };
+
             const submitBtn = loginForm.querySelector('.submit-btn');
             submitBtn.classList.add('loading');
             
             try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // On success
-                showSuccess(loginForm, 'Login successful!');
-                setTimeout(closeModal, 1500);
-            } catch (error) {
-                showError(loginForm.querySelector('input'), error.message || 'Login failed');
+                await handleLogin(formData);
             } finally {
                 submitBtn.classList.remove('loading');
             }
@@ -295,13 +294,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastName: document.getElementById('lastName').value,
                 email: document.getElementById('signup-email').value,
                 phone: document.getElementById('countryCode').value + document.getElementById('phone').value,
-                password: document.getElementById('signup-password').value,
+                password1: document.getElementById('signup-password').value,
+                password2: document.getElementById('signup-confirm-password').value,
                 userType: document.getElementById('userType').value,
-                profileType: document.getElementById(userType.value === 'individual' ? 'individualProfileType' : 'teamProfileType').value,
+                profileType: document.getElementById(
+                    document.getElementById('userType').value === 'individual' 
+                    ? 'individualProfileType' 
+                    : 'teamProfileType'
+                ).value,
                 universityName: document.getElementById('universityName')?.value || 'N/A',
                 organizationName: document.getElementById('organizationName')?.value || 'N/A',
                 organizationWebsite: document.getElementById('organizationWebsite')?.value || 'N/A'
             };
+
+            console.log('Form Data being sent:', formData);
 
             const submitBtn = signupForm.querySelector('.submit-btn');
             submitBtn.classList.add('loading');

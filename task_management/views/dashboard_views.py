@@ -4,6 +4,8 @@ from django.http import HttpResponseForbidden
 from django.urls import reverse
 from ..models import CustomUser, Task, Project, Team  # Import your models
 from datetime import datetime, timedelta
+from django.contrib.auth.decorators import login_required
+
 
 def get_dashboard_url(user):
     """
@@ -311,3 +313,7 @@ def team_hr_dashboard(request):
         'reviews': get_pending_reviews(request.user)
     }
     return render(request, 'task_management/dashboards/team_hr_dashboard.html', context)
+
+@login_required
+def profile_view(request):
+    return render(request, 'task_management/dashboards/profile.html')

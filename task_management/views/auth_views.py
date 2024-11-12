@@ -31,7 +31,7 @@ def get_dashboard_url(user):
     
     return reverse('dashboard_router')  # Fallback to router
 
-def home(request):
+def home_view(request):
     if request.user.is_authenticated:
         return redirect(get_dashboard_url(request.user))
     return render(request, 'task_management/home.html')

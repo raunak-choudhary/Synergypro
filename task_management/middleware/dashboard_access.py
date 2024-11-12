@@ -41,3 +41,13 @@ class DashboardAccessMiddleware:
                     return redirect('dashboard_router')
 
         return self.get_response(request)
+    
+class AuthenticationMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not request.user.is_authenticated:
+            if request.path.startswith('/dashboard/'):
+                return redirect('home')
+        return self.get_response(request)

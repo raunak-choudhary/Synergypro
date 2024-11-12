@@ -2,10 +2,13 @@ from django.urls import path
 from .views import auth_views, dashboard_views, contact_views
 
 urlpatterns = [
+
+    path('', auth_views.home_view, name='home'),
     # Authentication URLs
     path('api/signup/', auth_views.signup_view, name='signup'),
     path('api/login/', auth_views.login_view, name='login'),
     path('api/logout/', auth_views.logout_view, name='logout'),
+
     
     # Contact URLs
     path('api/contact/', contact_views.submit_query, name='submit_query'),
@@ -19,4 +22,5 @@ urlpatterns = [
     path('dashboard/team/professional/', dashboard_views.team_professional_dashboard, name='team_professional_dashboard'),
     path('dashboard/team/teacher/', dashboard_views.team_teacher_dashboard, name='team_teacher_dashboard'),
     path('dashboard/team/hr/', dashboard_views.team_hr_dashboard, name='team_hr_dashboard'),
+    path('profile/', dashboard_views.profile_view, name='profile'),
 ]

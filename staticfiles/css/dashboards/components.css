@@ -1,0 +1,66 @@
+/* components.css */
+/* Sidebar styles */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 1rem;
+}
+
+.sidebar-nav {
+    margin-top: 2rem;
+}
+
+.nav-item {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.nav-item.active {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(236, 73, 153, 0.2));
+}
+
+/* Card styles */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Button styles */
+.gradient-button {
+    background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: opacity 0.3s ease;
+}
+
+.gradient-button:hover {
+    opacity: 0.9;
+}
+
+/* Progress bar styles */
+.progress-bar {
+    height: 0.5rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 1rem;
+    transition: width 0.3s ease;
+}

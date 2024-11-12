@@ -1,17 +1,64 @@
 <!-- sidebar.html -->
 {% load static %}
-<aside class="w-64 glass-effect border-r border-gray-800">
-    <div class="p-6">
-        <div class="flex items-center space-x-4">
-            <img src="{% static 'images/logo.png' %}" alt="SynergyPro" class="w-8 h-8">
-            <h1 class="text-xl font-bold gradient-text">SynergyPro</h1>
+<aside class="dashboard-sidebar">
+    <!-- Logo Section -->
+    <div class="flex items-center p-6">
+        <img src="{% static 'images/logo.png' %}" alt="SynPro" class="w-8 h-8 mr-2">
+        <span class="text-xl font-bold bg-gradient-to-r from-[#bf5af2] to-pink-500 text-transparent bg-clip-text">SynergyPro</span>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="dashboard-nav">
+        <a href="{% url 'dashboard_router' %}" class="flex items-center px-3 py-2 text-gray-300 hover:bg-[#2A2B31] rounded-lg {% if request.resolver_match.url_name == 'dashboard_router' %}bg-[#2A2B31] text-[#bf5af2]{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+            </svg>
+            Overview
+        </a>
+
+        <a href="#" class="flex items-center px-3 py-2 text-gray-300 hover:bg-[#32333a] rounded-lg transition-colors {% if active_page == 'task' %}bg-[#32333a] text-[#bf5af2]{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            Task
+        </a>
+
+        <a href="#" class="flex items-center px-3 py-2 text-gray-300 hover:bg-[#32333a] rounded-lg transition-colors {% if active_page == 'calendar' %}bg-[#32333a] text-[#bf5af2]{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Calendar
+        </a>
+
+        <a href="#" class="flex items-center px-3 py-2 text-gray-300 hover:bg-[#32333a] rounded-lg transition-colors {% if active_page == 'message' %}bg-[#32333a] text-[#bf5af2]{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+            </svg>
+            Message
+        </a>
+
+        <a href="#" class="flex items-center px-3 py-2 text-gray-300 hover:bg-[#32333a] rounded-lg transition-colors {% if active_page == 'settings' %}bg-[#32333a] text-[#bf5af2]{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            Settings
+        </a>
+    </nav>
+
+    <!-- Help Center -->
+    <div class="dashboard-help-center">
+        <div class="bg-[#2A2B31] rounded-xl p-4 text-center">
+            <div class="bg-[#1E1F25] rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-3">
+                <svg class="w-6 h-6 text-[#bf5af2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-white font-medium mb-1">Help Center</h3>
+            <p class="text-gray-400 text-sm mb-3">Having Trouble in Learning. Please contact us for more questions.</p>
+            <button class="w-full bg-[#bf5af2] text-white py-2 rounded-lg text-sm hover:bg-opacity-90 transition-colors">
+                Go To Help Center
+            </button>
         </div>
     </div>
-    <nav class="mt-6">
-        <div class="px-4 space-y-2">
-            {% block sidebar_items %}
-            <!-- Will be overridden by specific dashboards -->
-            {% endblock %}
-        </div>
-    </nav>
 </aside>
