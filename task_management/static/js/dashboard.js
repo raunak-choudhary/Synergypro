@@ -1,23 +1,24 @@
-// dashboard.js
-
 class DashboardManager {
     constructor() {
         this.initializeElements();
         this.attachEventListeners();
         this.initializeNotifications();
         this.initializeFocusTimer();
+        this.updateTaskProgress();
     }
 
     initializeElements() {
+        // Navigation Elements
+        this.navItems = document.querySelectorAll('.nav-item');
+        this.helpCenterBtn = document.querySelector('.help-btn');
+
         // Header Elements
-        this.searchInput = document.querySelector('.search-input');
         this.notificationIcon = document.querySelector('.notification-icon');
         this.userProfile = document.querySelector('.user-profile');
         
         // Sidebar Elements
         this.sidebarToggle = document.querySelector('.sidebar-toggle');
         this.sidebar = document.querySelector('.sidebar');
-        this.navItems = document.querySelectorAll('.nav-item');
 
         // Focus Timer Elements
         this.timer = {
@@ -29,20 +30,24 @@ class DashboardManager {
             isRunning: false
         };
 
-        // Stats Elements
+        // Stats and Progress Elements
         this.statCards = document.querySelectorAll('.stat-card');
+        this.runningTaskProgress = document.querySelector('.running .progress-fill');
+        this.upcomingTaskProgress = document.querySelector('.upcoming .progress-fill');
     }
 
     attachEventListeners() {
-        // Header Events
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+        // Help Center
+        if (this.helpCenterBtn) {
+            this.helpCenterBtn.addEventListener('click', () => this.showHelpCenter());
         }
 
+        // Notification Events
         if (this.notificationIcon) {
             this.notificationIcon.addEventListener('click', () => this.toggleNotifications());
         }
 
+        // User Profile
         if (this.userProfile) {
             this.userProfile.addEventListener('click', () => this.toggleUserMenu());
         }
@@ -65,49 +70,114 @@ class DashboardManager {
             this.timer.resetBtn.addEventListener('click', () => this.resetTimer());
         }
 
-        // Close dropdowns when clicking outside
+        // Outside Click Handler
         document.addEventListener('click', (e) => this.handleOutsideClick(e));
     }
 
-    // Search Functionality
-    handleSearch(event) {
-        const searchTerm = event.target.value.toLowerCase();
-        // Implement search functionality
-        console.log('Searching for:', searchTerm);
+    showHelpCenter() {
+        const modal = document.createElement('div');
+        modal.className = 'help-modal';
+        modal.innerHTML = `
+            <div class="help-modal-content">
+                <div class="help-modal-header">
+                    <h3>Help Center</h3>
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="help-modal-body">
+                    <div class="help-section">
+                        <h4>Quick Start Guide</h4>
+                        <ul>
+                            <li>Create and track your tasks</li>
+                            <li>Use focus timer for productivity</li>
+                            <li>Monitor your progress</li>
+                            <li>Manage task priorities</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h4>Need Help?</h4>
+                        <p>Having trouble in learning? Contact our support team.</p>
+                        <button class="contact-support-btn">Contact Support</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+
+        modal.querySelector('.close-btn').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+
+        modal.querySelector('.contact-support-btn').addEventListener('click', () => {
+            this.showNotification('Support team will contact you shortly!');
+        });
     }
 
     // Notifications
     initializeNotifications() {
-        this.notifications = [];
-        this.unreadCount = 0;
+        this.notifications = [
+            { id: 1, message: 'Task deadline approaching', read: false },
+            { id: 2, message: 'New task assigned', read: false },
+            { id: 3, message: 'Progress update required', read: false }
+        ];
         this.updateNotificationBadge();
     }
 
     toggleNotifications() {
-        const notificationPanel = document.querySelector('.notifications-panel');
-        if (notificationPanel) {
-            notificationPanel.classList.toggle('show');
-            if (notificationPanel.classList.contains('show')) {
-                this.markNotificationsAsRead();
-            }
+        const panel = document.querySelector('.notifications-panel');
+        if (!panel) {
+            this.createNotificationsPanel();
+        } else {
+            panel.classList.toggle('show');
         }
+    }
+
+    createNotificationsPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'notifications-panel';
+        panel.innerHTML = `
+            <div class="notifications-header">
+                <h3>Notifications</h3>
+                <button class="mark-all-read">Mark all as read</button>
+            </div>
+            <div class="notifications-list">
+                ${this.notifications.map(notif => `
+                    <div class="notification-item ${notif.read ? 'read' : ''}">
+                        <span class="notification-message">${notif.message}</span>
+                        <span class="notification-time">Just now</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        document.querySelector('.notifications').appendChild(panel);
+        setTimeout(() => panel.classList.add('show'), 10);
+
+        panel.querySelector('.mark-all-read').addEventListener('click', () => {
+            this.markAllNotificationsAsRead();
+        });
     }
 
     updateNotificationBadge() {
+        const unreadCount = this.notifications.filter(n => !n.read).length;
         const badge = document.querySelector('.notification-badge');
         if (badge) {
-            badge.textContent = this.unreadCount || '';
-            badge.style.display = this.unreadCount ? 'block' : 'none';
+            badge.textContent = unreadCount || '';
+            badge.style.display = unreadCount ? 'block' : 'none';
         }
     }
 
-    // Focus Timer Functions
-    initializeFocusTimer() {
-        if (this.timer.display) {
-            this.updateTimerDisplay();
-        }
+    markAllNotificationsAsRead() {
+        this.notifications.forEach(n => n.read = true);
+        this.updateNotificationBadge();
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.classList.add('read');
+        });
     }
 
+    // Focus Timer Functions - Keeping your existing implementation
     toggleTimer() {
         if (!this.timer.isRunning) {
             this.startTimer();
@@ -124,10 +194,7 @@ class DashboardManager {
         this.timer.interval = setInterval(() => {
             this.timer.time--;
             this.updateTimerDisplay();
-
-            if (this.timer.time <= 0) {
-                this.completeTimer();
-            }
+            if (this.timer.time <= 0) this.completeTimer();
         }, 1000);
     }
 
@@ -146,48 +213,75 @@ class DashboardManager {
     completeTimer() {
         this.pauseTimer();
         this.showNotification('Focus session completed!');
-        this.timer.isRunning = false;
-        this.timer.startBtn.textContent = 'Start';
-        // Play notification sound or show alert
+        this.resetTimer();
     }
 
     updateTimerDisplay() {
+        if (!this.timer.display) return;
         const minutes = Math.floor(this.timer.time / 60);
         const seconds = this.timer.time % 60;
         this.timer.display.textContent = 
             `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Navigation
+    // Task Progress
+    updateTaskProgress() {
+        if (this.runningTaskProgress) {
+            this.animateProgress(this.runningTaskProgress, 65);
+        }
+        if (this.upcomingTaskProgress) {
+            this.upcomingTaskProgress.style.width = '0%';
+        }
+    }
+
+    animateProgress(element, targetWidth) {
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= targetWidth) {
+                clearInterval(interval);
+            } else {
+                width++;
+                element.style.width = width + '%';
+            }
+        }, 10);
+    }
+
+    // Navigation and Sidebar
     handleNavigation(event) {
         event.preventDefault();
         this.navItems.forEach(item => item.classList.remove('active'));
         event.currentTarget.classList.add('active');
     }
 
-    // Sidebar Toggle for Mobile
     toggleSidebar() {
-        this.sidebar.classList.toggle('show');
+        if (this.sidebar) {
+            this.sidebar.classList.toggle('show');
+        }
     }
 
     // Utility Functions
     handleOutsideClick(event) {
-        // Close notifications panel if clicking outside
-        if (!event.target.closest('.notifications') && 
+        const notificationsPanel = document.querySelector('.notifications-panel');
+        const helpModal = document.querySelector('.help-modal');
+        const userMenu = document.querySelector('.user-menu');
+
+        if (notificationsPanel && 
+            !event.target.closest('.notifications') && 
             !event.target.closest('.notifications-panel')) {
-            const notificationPanel = document.querySelector('.notifications-panel');
-            if (notificationPanel?.classList.contains('show')) {
-                notificationPanel.classList.remove('show');
-            }
+            notificationsPanel.classList.remove('show');
         }
 
-        // Close user menu if clicking outside
-        if (!event.target.closest('.user-profile') && 
+        if (helpModal && 
+            !event.target.closest('.help-modal-content') && 
+            !event.target.closest('.help-btn')) {
+            helpModal.classList.remove('show');
+            setTimeout(() => helpModal.remove(), 300);
+        }
+
+        if (userMenu && 
+            !event.target.closest('.user-profile') && 
             !event.target.closest('.user-menu')) {
-            const userMenu = document.querySelector('.user-menu');
-            if (userMenu?.classList.contains('show')) {
-                userMenu.classList.remove('show');
-            }
+            userMenu.classList.remove('show');
         }
     }
 
@@ -197,10 +291,7 @@ class DashboardManager {
         notification.textContent = message;
         document.body.appendChild(notification);
 
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 10);
-
+        setTimeout(() => notification.classList.add('show'), 10);
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
@@ -208,7 +299,7 @@ class DashboardManager {
     }
 }
 
-// Initialize Dashboard when DOM is loaded
+// Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
     window.dashboard = new DashboardManager();
 });

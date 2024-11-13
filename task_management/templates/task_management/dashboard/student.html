@@ -31,6 +31,10 @@
                     <span class="nav-icon">📅</span>
                     Calendar
                 </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </a>
             </div>
 
             <div class="nav-section">
@@ -44,22 +48,33 @@
                     Analytics
                 </a>
             </div>
+            
+            <!-- Help Center Box -->
+            <div class="help-center-box">
+                <div class="help-card">
+                    <div class="help-icon">?</div>
+                    <h4>Help Center</h4>
+                    <p>Having trouble in learning? Please contact us for more questions.</p>
+                    <button class="help-btn">Go To Help Center</button>
+                </div>
+            </div>
         </nav>
 
         <!-- Main Content -->
         <main class="main-content">
             <!-- Header -->
             <header class="dashboard-header">
-                <div class="search-container">
-                    <input type="text" placeholder="Search tasks..." class="search-input">
+                <div class="welcome-message">
+                    <h1>Hi, {{ user.first_name }} {{ user.last_name }}</h1>
+                    <p>Let's finish your task today!</p>
                 </div>
                 <div class="header-right">
                     <div class="notifications">
                         <span class="notification-icon">🔔</span>
+                        <span class="notification-badge">3</span>
                     </div>
                     <div class="user-profile">
                         <span class="avatar">{{ user.first_name|first }}{{ user.last_name|first }}</span>
-                        <span class="user-name">{{ user.first_name }}</span>
                     </div>
                 </div>
             </header>
@@ -104,6 +119,50 @@
                     <section class="focus-panel">
                         <!-- Content will be added here -->
                     </section>
+                </div>
+                                
+                
+                <!-- Task Cards -->
+                <div class="task-cards">
+                    <!-- Running Task -->
+                    <div class="task-card running">
+                        <h3>Running Task</h3>
+                        <div class="task-stats">
+                            <span class="task-number">65</span>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 65%"></div>
+                                </div>
+                                <span class="total-tasks">100 Total</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Task -->
+                    <div class="task-card upcoming">
+                        <h3>Upcoming Task</h3>
+                        <div class="task-stats">
+                            <div class="task-info">
+                                <img src="https://placehold.co/100x60/2a2a40/FFFFFF/png?text=Mobile+App" 
+                                    alt="Mobile App Design Task" 
+                                    class="task-image"
+                                    style="border-radius: 8px; object-fit: cover;">
+                                <div class="task-details">
+                                    <h4>Creating Mobile App Design</h4>
+                                    <span class="task-type">UI/UX Design</span>
+                                </div>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-info">
+                                    <span>Progress</span>
+                                    <span>0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

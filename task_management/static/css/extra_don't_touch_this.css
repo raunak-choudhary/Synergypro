@@ -1,67 +1,34 @@
-/* Modal backdrop */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1001;
-    left: 0;
+.dashboard-header {
+    height: 64px;  /* Keep this */
+    background: linear-gradient(135deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(26, 26, 46, 0.9) 100%
+    );
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
+    z-index: 10;
+    margin-bottom: 0;
+    height: 100vh;
 }
 
-/* Modal content */
-.modal-content {
-    position: relative;
-    z-index: 1002;
-    /* rest of your modal-content styles */
-}
-
-/* Toast Container - Highest z-index */
-.toast {
+.sidebar {
+    width: 260px;
+    background: linear-gradient(135deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(26, 26, 46, 0.9) 100%
+    );
+    backdrop-filter: blur(12px);
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
     position: fixed;
-    top: 30px;
-    right: 25px;
-    padding: 15px 25px;
-    color: white;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: none;
-    z-index: 9999;  /* Much higher than everything */
-    font-size: 16px;
-    opacity: 0;
-    transition: opacity 0.3s ease-in;
-    pointer-events: none;  /* This makes sure it doesn't interfere with clicks */
-}
-
-/* Toast Message */
-.toast-message {
-    position: relative;
-    z-index: 10000;
-}
-
-/* Toast Timeline */
-.toast-timeline {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 4px;
-    background-color: #239b56;
-    transition: width 0.05s linear;
-    z-index: 10000;
-}
-
-/* Toast States */
-.toast.show {
-    opacity: 1;
-    display: block;
-}
-
-.toast.hide {
-    opacity: 0;
-}
-
-/* Welcome Modal - adjust if needed */
-.welcome-modal {
-    z-index: 9998;
+    height: 100vh;
+    overflow-y: auto;
 }
