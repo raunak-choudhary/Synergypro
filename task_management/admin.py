@@ -3,11 +3,6 @@ from django.contrib.auth.admin import UserAdmin
 from .models import (
     CustomUser, 
     ContactQuery,
-    Task,
-    TaskComment,
-    TaskAttachment,
-    Project,
-    ProjectMilestone,
     Team,
     TeamMember
 )
@@ -33,10 +28,5 @@ class CustomUserAdmin(UserAdmin):
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(ContactQuery)
-admin.site.register(Task)
-admin.site.register(TaskComment)
-admin.site.register(TaskAttachment)
-admin.site.register(Project)
-admin.site.register(ProjectMilestone)
 admin.site.register(Team)
 admin.site.register(TeamMember)

@@ -29,9 +29,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 
 # Application definition
 
@@ -54,7 +51,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'task_management.middleware.dashboard_access.DashboardAccessMiddleware',
 ]
 
 ROOT_URLCONF = "synergypro.urls"
@@ -93,7 +89,7 @@ DATABASES = {
 # Authentication Settings
 AUTH_USER_MODEL = 'task_management.CustomUser'
 LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = 'dashboard_router'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Static files configuration

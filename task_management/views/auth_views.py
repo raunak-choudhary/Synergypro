@@ -1,19 +1,14 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from ..models import CustomUser
 import json
-from ..utils.messages import UserMessages
 
 def get_dashboard_url(user):
-    """
-    Determine the appropriate dashboard URL based on user type and profile
-    """
+    """Determine dashboard URL based on user type and profile"""
     if user.user_type == 'individual':
         if user.profile_type == 'student':
             return reverse('individual_student_dashboard')
@@ -22,18 +17,17 @@ def get_dashboard_url(user):
     elif user.user_type == 'team':
         if user.profile_type == 'student':
             return reverse('team_student_dashboard')
-        elif user.profile_type == 'professional':
-            return reverse('team_professional_dashboard')
         elif user.profile_type == 'teacher':
             return reverse('team_teacher_dashboard')
+        elif user.profile_type == 'professional':
+            return reverse('team_professional_dashboard')
         elif user.profile_type == 'hr':
             return reverse('team_hr_dashboard')
     
-    return reverse('dashboard_router')  # Fallback to router
+    # Default fallback
+    return reverse('individual_student_dashboard')
 
 def home_view(request):
-    if request.user.is_authenticated:
-        return redirect(get_dashboard_url(request.user))
     return render(request, 'task_management/home.html')
 
 @csrf_exempt
