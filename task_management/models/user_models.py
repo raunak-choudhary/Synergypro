@@ -27,6 +27,7 @@ class CustomUser(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
 
     class Meta:
         db_table = 'users'

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -155,8 +155,4 @@ def signup_view(request):
 @csrf_exempt
 def logout_view(request):
     logout(request)
-    return JsonResponse({
-        'status': 'success',
-        'message': 'Logged out successfully',
-        'redirect_url': reverse('home')
-    })
+    return redirect('/')

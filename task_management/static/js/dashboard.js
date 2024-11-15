@@ -2,8 +2,7 @@ class DashboardManager {
     constructor() {
         this.initializeElements();
         this.attachEventListeners();
-        this.initializeNotifications();
-        this.initializeFocusTimer();
+        //this.initializeFocusTimer();
         this.updateTaskProgress();
     }
 
@@ -13,7 +12,6 @@ class DashboardManager {
         this.helpCenterBtn = document.querySelector('.help-btn');
 
         // Header Elements
-        this.notificationIcon = document.querySelector('.notification-icon');
         this.userProfile = document.querySelector('.user-profile');
         
         // Sidebar Elements
@@ -34,22 +32,20 @@ class DashboardManager {
         this.statCards = document.querySelectorAll('.stat-card');
         this.runningTaskProgress = document.querySelector('.running .progress-fill');
         this.upcomingTaskProgress = document.querySelector('.upcoming .progress-fill');
+        
+        // Profile Elements
+        this.profileDropdown = document.getElementById('profileDropdown');
+        this.dropdownMenu = document.querySelector('.profile-dropdown-menu');
+        console.log('Profile elements:', { 
+            dropdown: this.profileDropdown, 
+            menu: this.dropdownMenu 
+        });
     }
 
     attachEventListeners() {
         // Help Center
         if (this.helpCenterBtn) {
             this.helpCenterBtn.addEventListener('click', () => this.showHelpCenter());
-        }
-
-        // Notification Events
-        if (this.notificationIcon) {
-            this.notificationIcon.addEventListener('click', () => this.toggleNotifications());
-        }
-
-        // User Profile
-        if (this.userProfile) {
-            this.userProfile.addEventListener('click', () => this.toggleUserMenu());
         }
 
         // Sidebar Events
@@ -69,6 +65,21 @@ class DashboardManager {
         if (this.timer.resetBtn) {
             this.timer.resetBtn.addEventListener('click', () => this.resetTimer());
         }
+
+        // Profile Events
+        if (this.profileDropdown) {
+            this.profileDropdown.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop event bubbling
+                this.toggleProfileDropdown();
+            });
+        }
+    
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#profileDropdown')) {
+                this.dropdownMenu?.classList.remove('show');
+            }
+        });
 
         // Outside Click Handler
         document.addEventListener('click', (e) => this.handleOutsideClick(e));
@@ -109,72 +120,6 @@ class DashboardManager {
             modal.classList.remove('show');
             setTimeout(() => modal.remove(), 300);
         });
-
-        modal.querySelector('.contact-support-btn').addEventListener('click', () => {
-            this.showNotification('Support team will contact you shortly!');
-        });
-    }
-
-    // Notifications
-    initializeNotifications() {
-        this.notifications = [
-            { id: 1, message: 'Task deadline approaching', read: false },
-            { id: 2, message: 'New task assigned', read: false },
-            { id: 3, message: 'Progress update required', read: false }
-        ];
-        this.updateNotificationBadge();
-    }
-
-    toggleNotifications() {
-        const panel = document.querySelector('.notifications-panel');
-        if (!panel) {
-            this.createNotificationsPanel();
-        } else {
-            panel.classList.toggle('show');
-        }
-    }
-
-    createNotificationsPanel() {
-        const panel = document.createElement('div');
-        panel.className = 'notifications-panel';
-        panel.innerHTML = `
-            <div class="notifications-header">
-                <h3>Notifications</h3>
-                <button class="mark-all-read">Mark all as read</button>
-            </div>
-            <div class="notifications-list">
-                ${this.notifications.map(notif => `
-                    <div class="notification-item ${notif.read ? 'read' : ''}">
-                        <span class="notification-message">${notif.message}</span>
-                        <span class="notification-time">Just now</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-
-        document.querySelector('.notifications').appendChild(panel);
-        setTimeout(() => panel.classList.add('show'), 10);
-
-        panel.querySelector('.mark-all-read').addEventListener('click', () => {
-            this.markAllNotificationsAsRead();
-        });
-    }
-
-    updateNotificationBadge() {
-        const unreadCount = this.notifications.filter(n => !n.read).length;
-        const badge = document.querySelector('.notification-badge');
-        if (badge) {
-            badge.textContent = unreadCount || '';
-            badge.style.display = unreadCount ? 'block' : 'none';
-        }
-    }
-
-    markAllNotificationsAsRead() {
-        this.notifications.forEach(n => n.read = true);
-        this.updateNotificationBadge();
-        document.querySelectorAll('.notification-item').forEach(item => {
-            item.classList.add('read');
-        });
     }
 
     // Focus Timer Functions - Keeping your existing implementation
@@ -212,7 +157,6 @@ class DashboardManager {
 
     completeTimer() {
         this.pauseTimer();
-        this.showNotification('Focus session completed!');
         this.resetTimer();
     }
 
@@ -248,7 +192,10 @@ class DashboardManager {
 
     // Navigation and Sidebar
     handleNavigation(event) {
-        event.preventDefault();
+        // Only prevent default if it's not an actual link
+        if (!event.currentTarget.getAttribute('href') || event.currentTarget.getAttribute('href') === '#') {
+            event.preventDefault();
+        }
         this.navItems.forEach(item => item.classList.remove('active'));
         event.currentTarget.classList.add('active');
     }
@@ -261,15 +208,8 @@ class DashboardManager {
 
     // Utility Functions
     handleOutsideClick(event) {
-        const notificationsPanel = document.querySelector('.notifications-panel');
         const helpModal = document.querySelector('.help-modal');
         const userMenu = document.querySelector('.user-menu');
-
-        if (notificationsPanel && 
-            !event.target.closest('.notifications') && 
-            !event.target.closest('.notifications-panel')) {
-            notificationsPanel.classList.remove('show');
-        }
 
         if (helpModal && 
             !event.target.closest('.help-modal-content') && 
@@ -285,13 +225,27 @@ class DashboardManager {
         }
     }
 
+    // Profile Dropdown
+    toggleProfileDropdown() {
+        if (this.dropdownMenu) {
+            // Close any other open dropdowns first
+            document.querySelectorAll('.profile-dropdown-menu.show')
+                .forEach(menu => {
+                    if (menu !== this.dropdownMenu) {
+                        menu.classList.remove('show');
+                    }
+                });
+            this.dropdownMenu.classList.toggle('show');
+        }
+    }
+
     showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
         document.body.appendChild(notification);
-
-        setTimeout(() => notification.classList.add('show'), 10);
+    
+        requestAnimationFrame(() => notification.classList.add('show'));
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
