@@ -154,9 +154,7 @@
                                 <label for="email">Email ID</label>
                                 <div class="input-with-button">
                                     <input type="email" id="email" value="{{ user.email }}" disabled>
-                                    <button type="button" class="verify-btn" id="verifyEmail">
-                                        Verify Email
-                                    </button>
+                                    <button type="button" class="verify-email-btn verify-btn">Verify Email</button>
                                 </div>
                             </div>
                         </div>
@@ -167,9 +165,7 @@
                                 <label for="phone">Mobile Number</label>
                                 <div class="input-with-button">
                                     <input type="tel" id="phone" value="{{ user.phone }}" disabled>
-                                    <button type="button" class="verify-btn" id="verifyPhone">
-                                        Verify Phone
-                                    </button>
+                                    <button type="button" class="verify-phone-btn verify-btn">Verify Mobile</button>
                                 </div>
                             </div>
                         </div>
@@ -234,11 +230,44 @@
         </div>
     </div>
 
+    <div id="otpVerificationModal" class="modal">
+        <div class="modal-content otp-modal">
+            <span class="close">&times;</span>
+            <h2 id="otpModalTitle">Please enter the one time password</h2>
+            <p class="otp-subtitle">A code has been sent to <span id="otpDestination"></span></p>
+            
+            <div class="otp-input-container">
+                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" maxlength="1" class="otp-input" />
+            </div>
+
+            <div class="countdown-timer-container">
+                <div class="timer-circle">
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-background" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                    <div class="timer-text">60s</div>
+                </div>
+            </div>
+    
+            <button id="validateOtpBtn" class="validate-otp-btn">Validate</button>
+            <div class="resend-container">
+                <button id="resendOtpBtn" class="resend-otp-btn">Resend OTP</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast-container"></div>
 
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="{% static 'js/profile.js' %}"></script>
+    <script src="{% static 'js/otp-modal.js' %}"></script>
 
 </body>
 </html>
