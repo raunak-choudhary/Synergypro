@@ -89,6 +89,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group label {
@@ -112,35 +113,37 @@
 
 .verify-btn {
     background: linear-gradient(135deg, var(--rich-purple), var(--bright-purple));
-    color: var(--text-primary);
+    color: white;
     border: none;
     border-radius: 8px;
+    padding: 0.75rem 1.5rem;
     cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
     transition: all 0.2s ease;
-    padding: 8px 24px;
-    font-size: 0.875rem; 
-    min-width: 120px;
-    height: 40px; 
-    display: flex;     
-    align-items: center; 
-    justify-content: center;
-    white-space: nowrap; 
 }
 
 .verify-btn:hover {
     opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .input-with-button {
     display: flex;
     align-items: center;
     gap: 1rem;
+    width: 100%;
 }
 
 .input-with-button input {
     flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    min-width: 0;
 }
 
 .save-btn {
@@ -191,7 +194,8 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     color: white;
     pointer-events: auto;
-    z-index: 1001; 
+    z-index: 1001;
+    transition: opacity 0.5s ease-out;
 }
 
 body.modal-open {
@@ -469,6 +473,16 @@ body.modal-open {
     text-align: center;
 }
 
+.otp-modal h2 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+    white-space: nowrap;  
+    overflow: hidden;    
+    text-overflow: ellipsis;
+}
+
 .otp-subtitle {
     color: #ffffff;
     margin: 15px 0 25px;
@@ -597,6 +611,42 @@ body.modal-open {
     transition: stroke-dashoffset 1s linear;
 }
 
+.verification-status {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-left: auto;
+}
+
+.verification-status.success {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.verification-icon {
+    font-size: 1.1em;
+}
+
+input[data-verified="true"] {
+    flex: 1;
+}
+
+.verification-text {
+    display: inline-block;
+}
+
+.verification-status.success + .verify-btn,
+.verify-btn + .verification-status.success {
+    display: none;
+}
+
 /* Center the container for resend button */
 .resend-container {
     text-align: center;
@@ -639,5 +689,18 @@ body.modal-open {
     }
     to {
         stroke-dashoffset: 283;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .input-with-button input {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .verification-status.success {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
     }
 }

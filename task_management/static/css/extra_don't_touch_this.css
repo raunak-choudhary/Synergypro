@@ -1,16 +1,15 @@
-.timer-circle {
-    position: relative;
-    width: 80px;
-    height: 80px;
-    transition: opacity 0.3s ease;
+.otp-modal h2 {
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+    white-space: nowrap;  /* Keep text in one line */
+    overflow: hidden;     /* In case of very small screens */
+    text-overflow: ellipsis; /* Show ... if text needs to be truncated */
 }
 
-.timer-active .timer-progress {
-    animation: countdown 60s linear forwards;
-    animation-play-state: running;
-}
-
-/* Ensure smooth transitions */
-.resend-otp-btn {
-    transition: opacity 0.3s ease;
+/* Ensure modal is wide enough to accommodate the text */
+.modal-content.otp-modal {
+    min-width: min-content; /* Ensures modal is at least as wide as the content */
+    max-width: 90vw;      /* Prevents modal from being too wide on large screens */
 }

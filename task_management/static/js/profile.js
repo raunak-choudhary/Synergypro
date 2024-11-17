@@ -6,7 +6,6 @@ class ProfileManager {
 
     initializeElements() {
         // Photo Upload Elements
-        this.photoUploadInput = document.getElementById('photo-upload');
         this.profileImage = document.getElementById('profileImage');
         this.avatar = document.querySelector('.avatar');
         
@@ -14,9 +13,9 @@ class ProfileManager {
         this.profileDropdown = document.getElementById('profileDropdown');
         this.dropdownMenu = document.querySelector('.profile-dropdown-menu');
         
-        // Verification Buttons
-        this.verifyEmailBtn = document.getElementById('verifyEmail');
-        this.verifyPhoneBtn = document.getElementById('verifyPhone');
+        //Verification Buttons
+        //this.verifyEmailBtn = document.getElementById('verifyEmail');
+        //this.verifyPhoneBtn = document.getElementById('verifyPhone');
     }
 
     attachEventListeners() {      
@@ -36,13 +35,13 @@ class ProfileManager {
         });
     
         // Verification Buttons
-        if (this.verifyEmailBtn) {
-            this.verifyEmailBtn.addEventListener('click', () => this.handleEmailVerification());
-        }
+        //if (this.verifyEmailBtn) {
+            //this.verifyEmailBtn.addEventListener('click', () => this.handleEmailVerification());
+        //}
     
-        if (this.verifyPhoneBtn) {
-            this.verifyPhoneBtn.addEventListener('click', () => this.handlePhoneVerification());
-        }
+        //if (this.verifyPhoneBtn) {
+            //this.verifyPhoneBtn.addEventListener('click', () => this.handlePhoneVerification());
+        //}
 
         //Profile Dropdown Call
         this.initializeProfileDropdown();
@@ -87,13 +86,13 @@ class ProfileManager {
         }
     }
 
-    handleEmailVerification() {
-        this.showNotification('Email verification link sent!', 'success');
-    }
+    //handleEmailVerification() {
+        //this.showNotification('Email verification link sent!', 'success');
+    //}
 
-    handlePhoneVerification() {
-        this.showNotification('SMS verification code sent!', 'success');
-    }
+    //handlePhoneVerification() {
+        //this.showNotification('SMS verification code sent!', 'success');
+    //}
 
     handleOutsideClick(event) {
         if (this.photoOptionsModal && 

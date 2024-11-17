@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-6%9b!%(3q5&7pg)mk3hkq=0f&pde3l*f%ww5eh3=$n!2@7p7*6"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False 
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -109,6 +109,16 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'task_management', 'static'),
 ]
 
+#OTP Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com' 
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'raunakchoudhary17@gmail.com'
+EMAIL_HOST_PASSWORD = 'uoah ficu zlhx phwt'  # Gmail App Password
+
+#EMAIL_USE_SSL = False
+#EMAIL_USE_TLS = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

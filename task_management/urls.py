@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
 
 urlpatterns = [
@@ -21,4 +21,12 @@ urlpatterns = [
     # Profile image upload path and capture image
     path('api/profile/upload-image/', dashboard_views.upload_profile_image, name='upload_profile_image'),
     path('api/profile/capture-image/', dashboard_views.capture_profile_image, name='capture_profile_image'),
+
+    # Generate and Verify OTP
+    path('api/otp/', include([
+        path('generate/', dashboard_views.generate_verification_otp, name='generate_otp'),
+        path('verify/', dashboard_views.verify_otp, name='verify_otp'),
+        path('status/', dashboard_views.verification_status, name='verification_status'),  # New endpoint
+        path('resend/', dashboard_views.resend_otp, name='resend_otp'),  # New endpoint
+    ])),
 ]

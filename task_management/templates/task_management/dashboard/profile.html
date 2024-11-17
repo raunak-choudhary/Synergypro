@@ -152,9 +152,16 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="email">Email ID</label>
-                                <div class="input-with-button">
-                                    <input type="email" id="email" value="{{ user.email }}" disabled>
-                                    <button type="button" class="verify-email-btn verify-btn">Verify Email</button>
+                                <div id="email-verification-container" class="input-with-button">
+                                    <input type="email" id="email" name="email" value="{{ user.email }}" {% if user.email_verified %}data-verified="true"{% endif %} disabled>
+                                    {% if not user.email_verified %}
+                                        <button type="button" class="verify-email-btn verify-btn">Verify Email</button>
+                                    {% else %}
+                                        <div class="verification-status success">
+                                            <span class="verification-icon">✓</span>
+                                            <span class="verification-text">Email Verified</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -163,9 +170,16 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="phone">Mobile Number</label>
-                                <div class="input-with-button">
-                                    <input type="tel" id="phone" value="{{ user.phone }}" disabled>
-                                    <button type="button" class="verify-phone-btn verify-btn">Verify Mobile</button>
+                                <div id="mobile-verification-container" class="input-with-button">
+                                    <input type="tel" id="phone" name="phone" value="{{ user.phone }}" {% if user.mobile_verified %}data-verified="true"{% endif %} disabled>
+                                    {% if not user.mobile_verified %}
+                                        <button type="button" class="verify-phone-btn verify-btn">Verify Mobile</button>
+                                    {% else %}
+                                        <div class="verification-status success">
+                                            <span class="verification-icon">✓</span>
+                                            <span class="verification-text">Mobile Verified</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -237,12 +251,12 @@
             <p class="otp-subtitle">A code has been sent to <span id="otpDestination"></span></p>
             
             <div class="otp-input-container">
-                <input type="text" maxlength="1" class="otp-input" />
-                <input type="text" maxlength="1" class="otp-input" />
-                <input type="text" maxlength="1" class="otp-input" />
-                <input type="text" maxlength="1" class="otp-input" />
-                <input type="text" maxlength="1" class="otp-input" />
-                <input type="text" maxlength="1" class="otp-input" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
             </div>
 
             <div class="countdown-timer-container">
@@ -263,11 +277,18 @@
     </div>
 
     <div class="toast-container"></div>
-
+    
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
     <script src="{% static 'js/profile.js' %}"></script>
     <script src="{% static 'js/otp-modal.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM loaded, initializing OTP manager");
+            window.otpManager = new OTPManager();
+        });
+    </script>
+
 
 </body>
 </html>

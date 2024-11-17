@@ -8,6 +8,9 @@ from django.views.decorators.http import require_http_methods
 import base64
 from PIL import Image
 from io import BytesIO
+import random
+from datetime import datetime, timedelta
+from ..utils.message_service import MessageService 
 
 @login_required
 def profile_view(request):
@@ -184,4 +187,294 @@ def capture_profile_image(request):
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
+def generate_otp():
+    """Generate a 6-digit OTP"""
+    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+def get_otp_file_path(user, verification_type):
+    """Generate path for OTP storage file"""
+    # Create directory if it doesn't exist
+    otp_dir = os.path.join(settings.BASE_DIR, 'temp_otp')
+    os.makedirs(otp_dir, exist_ok=True)
+    
+    # Generate filename based on user and verification type
+    filename = f"{user.username}_{verification_type}_otp.txt"
+    return os.path.join(otp_dir, filename)
+
+@login_required
+@require_http_methods(["POST"])
+def generate_verification_otp(request):
+    try:
+        print("Request received for OTP generation")
+        print("POST data:", request.POST)
+        verification_type = request.POST.get('type')
+        print(f"Verification type: {verification_type}")
+
+        ATTEMPT_LIMIT = 3  # Maximum attempts allowed
+        COOLDOWN_MINUTES = 15  # Cooldown period in minutes
+
+        current_time = datetime.now()
+        
+        if not verification_type:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Verification type is required'
+            }, status=400)
+        
+        if verification_type not in ['email', 'mobile']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid verification type'
+            }, status=400)
+
+        # Check if already verified
+        if verification_type == 'email' and request.user.email_verified:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Email already verified'
+            }, status=400)
+        elif verification_type == 'mobile' and request.user.mobile_verified:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Mobile number already verified'
+            }, status=400)
+
+        # Check if can attempt verification
+        if not request.user.can_verify_again(waiting_time_minutes=1):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Please wait before requesting another OTP'
+            }, status=400)
+        
+        attempts = request.session.get('verification_attempts', {})
+        verification_key = f"{verification_type}_verification"
+
+        if verification_key not in attempts:
+            attempts[verification_key] = {
+                'count': 0,
+                'last_attempt': None,
+                'cooldown_until': None
+            }
+        
+        attempt_info = attempts[verification_key]
+
+        # Check if user is in cooldown period
+        if attempt_info['cooldown_until']:
+            cooldown_until = datetime.fromisoformat(attempt_info['cooldown_until'])
+            if current_time < cooldown_until:
+                remaining_minutes = int((cooldown_until - current_time).total_seconds() / 60)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Please wait {remaining_minutes} minutes before requesting another OTP'
+                }, status=400)
+        
+        # Check attempt count
+        if attempt_info['count'] >= ATTEMPT_LIMIT:
+            # Set cooldown period
+            cooldown_until = current_time + timedelta(minutes=COOLDOWN_MINUTES)
+            attempt_info['cooldown_until'] = cooldown_until.isoformat()
+            attempt_info['count'] = 0  # Reset count
+            request.session['verification_attempts'] = attempts
+            request.session.modified = True
+            
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Too many attempts. Please try again after {COOLDOWN_MINUTES} minutes'
+            }, status=400)
+        
+        attempt_info['count'] += 1
+        attempt_info['last_attempt'] = current_time.isoformat()
+        request.session['verification_attempts'] = attempts
+        request.session.modified = True
+
+        # Generate OTP
+        otp = generate_otp()
+        
+        # Store OTP in temporary file
+        file_path = get_otp_file_path(request.user, verification_type)
+        with open(file_path, 'w') as f:
+            f.write(f"{otp}:{datetime.now().isoformat()}")
+
+        # Send OTP via email or SMS
+        message_service = MessageService()
+        if verification_type == 'email':
+            result = message_service.send_otp_email(request.user.email, otp)
+        else:
+            result = message_service.send_otp_sms(request.user.phone, otp)
+
+        if not result['success']:
+            # If sending fails, delete the OTP file and return error
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Failed to send OTP: {result["message"]}'
+            }, status=500)
+
+        # Update verification attempt timestamp
+        request.user.update_verification_attempt()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'OTP sent successfully to your {verification_type}'
+        })
+
+    except Exception as e:
+        # Cleanup in case of error
+        if 'file_path' in locals() and os.path.exists(file_path):
+            os.remove(file_path)
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def verify_otp(request):
+    try:
+        verification_type = request.POST.get('type')
+        entered_otp = request.POST.get('otp')
+
+        if not verification_type or not entered_otp:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required parameters'
+            }, status=400)
+
+        # Get stored OTP
+        file_path = get_otp_file_path(request.user, verification_type)
+        if not os.path.exists(file_path):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No OTP found. Please generate a new OTP'
+            }, status=400)
+
+        # Read and verify OTP
+        try:
+            with open(file_path, 'r') as f:
+                content = f.read().strip()
+                
+            # Split content and parse timestamp
+            if ':' not in content:
+                raise ValueError("Invalid content format")
+                
+            # Split only on first occurrence of ':'
+            stored_otp, timestamp = content.split(':', 1)
+            stored_time = datetime.fromisoformat(timestamp.strip())
+            
+        except (ValueError, IOError) as e:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid OTP format or file read error'
+            }, status=400)
+
+        # Check if OTP is expired (5 minutes validity)
+        time_diff = (datetime.now() - stored_time).total_seconds()
+        if time_diff > 300:  # 5 minutes = 300 seconds
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return JsonResponse({
+                'status': 'error',
+                'message': 'OTP expired. Please generate a new OTP'
+            }, status=400)
+
+        # Verify OTP
+        if entered_otp != stored_otp:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid OTP'
+            }, status=400)
+
+        # Mark as verified
+        if verification_type == 'email':
+            request.user.mark_email_verified()
+            success_message = {"status": "success", "message": "Email verified successfully", "type": "email"}
+        else:
+            request.user.mark_mobile_verified()
+            success_message = {"status": "success", "message": "Mobile verified successfully", "type": "mobile"}
+
+        # Delete OTP file after successful verification
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except OSError:
+            pass  # Ignore file deletion errors
+
+        return JsonResponse(success_message)
+
+    except Exception as e:
+        print(f"Verification error: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Verification failed'
+        }, status=500)
+    
+@login_required
+@require_http_methods(["GET"])
+def verification_status(request):
+    """Check verification status for email and mobile"""
+    try:
+        return JsonResponse({
+            'status': 'success',
+            'data': {
+                'email': {
+                    'verified': request.user.email_verified,
+                    'verified_at': request.user.email_verified_at.isoformat() if request.user.email_verified_at else None
+                },
+                'mobile': {
+                    'verified': request.user.mobile_verified,
+                    'verified_at': request.user.mobile_verified_at.isoformat() if request.user.mobile_verified_at else None
+                }
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+    
+
+@login_required
+@require_http_methods(["POST"])
+def resend_otp(request):
+    """Resend OTP with validation checks"""
+    try:
+        verification_type = request.POST.get('type')
+        if verification_type not in ['email', 'mobile']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid verification type'
+            }, status=400)
+
+        # Check if already verified
+        if verification_type == 'email' and request.user.email_verified:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Email already verified'
+            }, status=400)
+        elif verification_type == 'mobile' and request.user.mobile_verified:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Mobile number already verified'
+            }, status=400)
+
+        # Check cooldown period
+        if not request.user.can_verify_again(waiting_time_minutes=1):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Please wait before requesting another OTP'
+            }, status=400)
+
+        # Generate and send new OTP
+        return generate_verification_otp(request)
+
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
