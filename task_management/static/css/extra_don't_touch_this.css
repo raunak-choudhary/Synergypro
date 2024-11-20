@@ -1,15 +1,20 @@
-.otp-modal h2 {
-    color: #fff;
-    margin-bottom: 20px;
-    font-size: 24px;
-    text-align: center;
-    white-space: nowrap;  /* Keep text in one line */
-    overflow: hidden;     /* In case of very small screens */
-    text-overflow: ellipsis; /* Show ... if text needs to be truncated */
+.notifications-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 350px; /* Increased from 300px */
 }
 
-/* Ensure modal is wide enough to accommodate the text */
-.modal-content.otp-modal {
-    min-width: min-content; /* Ensures modal is at least as wide as the content */
-    max-width: 90vw;      /* Prevents modal from being too wide on large screens */
+.notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.notifications-header-actions {
+    display: flex;
+    gap: 1rem;
+    white-space: nowrap;
 }

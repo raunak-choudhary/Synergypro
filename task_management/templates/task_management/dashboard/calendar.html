@@ -4,52 +4,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynergyPro - Student Dashboard</title>
+    <title>SynergyPro - Calendar</title>
     <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
+        <!-- Left Panel -->
+        <div class="sidebar">
             <div class="sidebar-header">
                 <img src="{% static 'images/logo.png' %}" alt="SynergyPro" class="logo">
                 <span class="logo-text">SynergyPro</span>
             </div>
-
+    
             <div class="nav-section">
                 <span class="section-title">MAIN</span>
-                <a href="{% url 'individual_student_dashboard' %}" class="nav-item active">
+                <a href="{% url 'individual_student_dashboard' %}" class="nav-item">
                     <span class="nav-icon">📊</span>
                     Overview
                 </a>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon">📝</span>
-                    Tasks
+                    <span class="nav-icon">📝</span>Tasks
                 </a>
-                <a href="{% url 'calendar' %}" class="nav-item">
+                <a href="{% url 'calendar' %}" class="nav-item active">
                     <span class="nav-icon">📅</span>
                     Calendar
                 </a>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon">⚙️</span>
-                    Settings
+                    <span class="nav-icon">⚙️</span>Settings
                 </a>
             </div>
-
+    
             <div class="nav-section">
                 <span class="section-title">TOOLS</span>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon">⏲️</span>
-                    Focus Timer
+                    <span class="nav-icon">⏲️</span>Focus Timer
                 </a>
                 <a href="#" class="nav-item">
-                    <span class="nav-icon">📈</span>
-                    Analytics
+                    <span class="nav-icon">📈</span>Analytics
                 </a>
             </div>
-            
-            <!-- Help Center Box -->
+    
             <div class="help-center-box">
                 <div class="help-card">
                     <div class="help-icon">?</div>
@@ -58,17 +55,29 @@
                     <button class="help-btn">Go To Help Center</button>
                 </div>
             </div>
-        </nav>
-
+        </div>
+    
         <!-- Main Content -->
-        <main class="main-content">
+        <div class="main-content">
             <!-- Header -->
-            <header class="dashboard-header">
+            <div class="dashboard-header">
                 <div class="welcome-message">
-                    <h1>Hi, {{ user.first_name }} {{ user.last_name }}</h1>
-                    <p>Let's finish your task today!</p>
+                    <h1>Calendar</h1>
                 </div>
+    
                 <div class="header-right">
+                    <div id="viewDropdown" class="user-profile"> 
+                        <div class="current-view">
+                            <span class="view-text">Month</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </div>
+                        <div class="profile-dropdown-menu">    
+                            <div class="dropdown-item active">Month</div> 
+                            <div class="dropdown-item">Week</div>
+                        </div>
+                    </div>
                     <!-- Notifications Panel-->
                     <div class="notifications">
                         <div class="notification-trigger" style="padding: 8px; justify-content: center; align-items: center; display: flex;">
@@ -119,98 +128,40 @@
                         </div>
                     </div>
                 </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <!-- Stats Overview -->
-                <div class="stats-section">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-title">Total Tasks</span>
-                            <span class="stat-value">{{ total_tasks }}</span>
-                        </div>
-                        <span class="stat-trend">↑ 12% from last week</span>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-title">In Progress</span>
-                            <span class="stat-value">{{ in_progress }}</span>
-                        </div>
-                        <span class="stat-trend">Current Focus</span>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <span class="stat-title">Completed</span>
-                            <span class="stat-value">{{ completed }}</span>
-                        </div>
-                        <span class="stat-trend">3 today</span>
+            </div>
+    
+            <!-- Calendar Content -->
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <div class="calendar-navigation">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIj48cGF0aCBkPSJNMTUgMThsLTYtNiA2LTYiIC8+PC9zdmc+" class="nav-btn prev-month">
+                        <h2 id="currentMonth"></h2>
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIj48cGF0aCBkPSJNOSAxOGw2LTYtNi02Ii8+PC9zdmc+" class="nav-btn next-month">
                     </div>
                 </div>
-
-                <!-- Main Dashboard Grid -->
-                <div class="dashboard-grid">
-                    <!-- Tasks Section -->
-                    <section class="tasks-panel">
-                        <!-- Content will be added here -->
-                    </section>
-
-                    <!-- Focus Timer Section -->
-                    <section class="focus-panel">
-                        <!-- Content will be added here -->
-                    </section>
-                </div>
-                                
                 
-                <!-- Task Cards -->
-                <div class="task-cards">
-                    <!-- Running Task -->
-                    <div class="task-card running">
-                        <h3>Running Task</h3>
-                        <div class="task-stats">
-                            <span class="task-number">65%</span>
-                            <div class="progress-container">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 65%"></div>
-                                </div>
-                                <span class="total-tasks">100% Total</span>
-                            </div>
-                        </div>
+                <div class="calendar-grid">
+                    <div class="calendar-days-header">
+                        <div class="day-header">Sun</div>
+                        <div class="day-header">Mon</div>
+                        <div class="day-header">Tue</div>
+                        <div class="day-header">Wed</div>
+                        <div class="day-header">Thu</div>
+                        <div class="day-header">Fri</div>
+                        <div class="day-header">Sat</div>
                     </div>
-
-                    <!-- Upcoming Task -->
-                    <div class="task-card upcoming">
-                        <h3>Upcoming Task</h3>
-                        <div class="task-stats">
-                            <div class="task-info">
-                                <img src="https://placehold.co/100x60/2a2a40/FFFFFF/png?text=Mobile+App" 
-                                    alt="Mobile App Design Task" 
-                                    class="task-image"
-                                    style="border-radius: 8px; object-fit: cover;">
-                                <div class="task-details">
-                                    <h4>Creating Mobile App Design</h4>
-                                    <span class="task-type">UI/UX Design</span>
-                                </div>
-                            </div>
-                            <div class="progress-container">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 0%"></div>
-                                </div>
-                                <div class="progress-info">
-                                    <span>Progress</span>
-                                    <span>0%</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="calendar-cells" id="calendarGrid">
+                        <!-- Calendar cells will be populated by JavaScript -->
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
     
-    <script src="{% static 'js/notifications.js' %}"></script>
-    <script src="{% static 'js/dashboard.js' %}"></script>
+
+    <!-- Scripts -->
+    {% csrf_token %}
+    <script src="{% static 'js/notifications.js' %}"></script>  
+    <script src="{% static 'js/calendar-manager.js' %}"></script>
 </body>
 </html>

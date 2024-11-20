@@ -1,5 +1,6 @@
 from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
+from .views.calendar_views import calendar_view
 
 urlpatterns = [
 
@@ -29,4 +30,7 @@ urlpatterns = [
         path('status/', dashboard_views.verification_status, name='verification_status'),  # New endpoint
         path('resend/', dashboard_views.resend_otp, name='resend_otp'),  # New endpoint
     ])),
+
+    # Calendar path
+    path('dashboard/calendar/', calendar_view, name='calendar'),
 ]
