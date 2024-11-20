@@ -417,36 +417,12 @@ class CalendarManager {
     initializeNotifications() {
         const notificationTrigger = document.querySelector('.notification-trigger');
         const notificationsPanel = document.querySelector('.notifications-panel');
-    
+        
         if (notificationTrigger && notificationsPanel) {
             notificationTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notificationsPanel.classList.toggle('show');
             });
-    
-            // Handle mark all as read
-            const markAllRead = notificationsPanel.querySelector('.notifications-header button:first-of-type');
-            if (markAllRead) {
-                markAllRead.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const unreadItems = notificationsPanel.querySelectorAll('.notification-item.unread');
-                    unreadItems.forEach(item => {
-                        item.classList.remove('unread');
-                    });
-                });
-            }
-    
-            // Handle clear all
-            const clearAll = notificationsPanel.querySelector('.notifications-header button:last-of-type');
-            if (clearAll) {
-                clearAll.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const notificationsList = notificationsPanel.querySelector('.notifications-list');
-                    if (notificationsList) {
-                        notificationsList.innerHTML = '';
-                    }
-                });
-            }
     
             // Close on outside click
             document.addEventListener('click', (e) => {
@@ -457,7 +433,7 @@ class CalendarManager {
             });
         }
     
-        // Initialize NotificationManager if available
+        // Initialize NotificationManager
         if (typeof NotificationManager !== 'undefined') {
             this.notificationManager = new NotificationManager();
         }
