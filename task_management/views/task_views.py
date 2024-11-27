@@ -10,7 +10,6 @@ def tasks_view(request):
 
 def tasks_api(request):
     tasks = Task.objects.all().order_by('-created_at')
-    print(f"Number of tasks: {tasks.count()}")
     tasks_data = [
         {
             'id': task.id,
@@ -74,3 +73,13 @@ def update_task(request, task_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+@csrf_exempt
+def delete_task(request, task_id):
+    if request.method == 'DELETE':
+        try:
+            task = get_object_or_404(Task, id=task_id)
+            task.delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

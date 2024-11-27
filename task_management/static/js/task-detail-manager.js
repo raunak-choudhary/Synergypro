@@ -51,4 +51,40 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
         });
     }
+
+    const deleteBtn = document.getElementById('deleteBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const taskId = window.location.pathname.split('/')[2];
+
+    // Show modal
+    deleteBtn.addEventListener('click', function() {
+        deleteModal.style.display = 'flex';
+    });
+
+    // Hide modal
+    cancelDelete.addEventListener('click', function() {
+        deleteModal.style.display = 'none';
+    });
+
+    // Handle delete confirmation
+    confirmDelete.addEventListener('click', function() {
+        fetch(`/api/task/${taskId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = '/tasks/';
+            } else {
+                alert('Failed to delete task');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+        });
+    });
 });

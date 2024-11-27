@@ -16,6 +16,10 @@
     color: #333;
 }
 
+.task-header h5 {
+    color: #666;
+}
+
 .task-header h1 {
     color: #2d3436;
     margin: 1rem 0;
@@ -31,6 +35,7 @@
 
 /* Description Section */
 .description-section {
+    color: #333;
     background-color: #f9f9f9;
     padding: 1.5rem;
     border-radius: 8px;
@@ -336,3 +341,105 @@
     font-size: 1.2rem;
     line-height: 1;
 }
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+}
+
+.delete-modal-content {
+    color: #666;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.delete-btn {
+    padding: 0.5rem 1rem;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+}
+
+.delete-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #666;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.delete-confirm-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.delete-confirm-btn:hover {
+    background: #c82333;
+}
+

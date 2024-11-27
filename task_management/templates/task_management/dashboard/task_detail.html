@@ -75,6 +75,9 @@
                     <button class="edit-btn" id="editButton">
                         <span class="edit-icon">✎</span> Edit
                     </button>
+                    <button class="delete-btn" id="deleteButton">
+                        <span class="delete-icon">🗑</span> Delete
+                    </button>
                 </div>
 
                 <div class="edit-modal" id="editModal" style="display: none;">
@@ -101,6 +104,17 @@
                                 <button type="button" class="cancel-btn" id="cancelEdit">Cancel</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <div class="delete-modal" id="deleteModal" style="display: none;">
+                    <div class="modal-content">
+                        <h2 class="delete-modal-content">Delete Task</h2>
+                        <p class="delete-modal-content">Are you sure you want to delete this task? This action cannot be undone.</p>
+                        <div class="modal-actions">
+                            <button class="delete-confirm-btn" id="confirmDelete">Delete</button>
+                            <button class="cancel-btn" id="cancelDelete">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -63,5 +63,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return cookieValue;
     }
+
+    // Delete functionality
+    const deleteButton = document.getElementById('deleteButton');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+
+    deleteButton.addEventListener('click', () => {
+        deleteModal.style.display = 'flex';
+    });
+
+    cancelDelete.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+    });
+
+    confirmDelete.addEventListener('click', () => {
+        const taskId = window.location.pathname.split('/')[2];
+
+        fetch(`/api/task/${taskId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = '/tasks/';
+            } else {
+                alert('Failed to delete task');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
 });
 
