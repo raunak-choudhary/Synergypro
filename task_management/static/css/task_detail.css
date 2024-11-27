@@ -308,3 +308,31 @@
     gap: 1rem;
     margin-top: 2rem;
 }
+
+.back-section {
+    margin-bottom: 2rem;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    color: #495057;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.back-button:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+.back-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+}
