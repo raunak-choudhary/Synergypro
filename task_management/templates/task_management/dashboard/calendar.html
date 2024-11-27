@@ -25,7 +25,7 @@
                     <span class="nav-icon">📊</span>
                     Overview
                 </a>
-                <a href="#" class="nav-item">
+                <a href="{% url 'tasks' %}" class="nav-item">
                     <span class="nav-icon">📝</span>Tasks
                 </a>
                 <a href="{% url 'calendar' %}" class="nav-item active">
@@ -158,6 +158,20 @@
         </div>
     </div>
     
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Create Task</h2>
+            <form id="taskForm">
+                {% csrf_token %}
+                <input type="hidden" id="taskStartDate" name="start_date">
+                <input type="text" id="taskTitle" name="title" placeholder="Task Title" required>
+                <textarea id="taskDescription" name="description" placeholder="Task Description"></textarea>
+                <input type="date" id="taskEndDate" name="end_date" placeholder="End Date (Optional)">
+                <button type="submit">Create Task</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Scripts -->
     {% csrf_token %}
