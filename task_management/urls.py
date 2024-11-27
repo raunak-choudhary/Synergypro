@@ -1,6 +1,7 @@
 from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
 from .views.calendar_views import calendar_view, create_task
+from .views.task_views import tasks_view, tasks_api, task_detail
 
 urlpatterns = [
 
@@ -34,4 +35,7 @@ urlpatterns = [
     # Calendar path
     path('dashboard/calendar/', calendar_view, name='calendar'),
     path('api/tasks/create/', create_task, name='create_task'),
+    path('tasks/', tasks_view, name='tasks'),
+    path('api/tasks/', tasks_api, name='tasks_api'),
+    path('task/<int:pk>/', task_detail, name='task_detail'),
 ]

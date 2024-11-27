@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynergyPro - Calendar</title>
+    <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+</head>
+
+<body>
+
+     <div class="dashboard-container">
+        <!-- Left Panel -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="{% static 'images/logo.png' %}" alt="SynergyPro" class="logo">
+                <span class="logo-text">SynergyPro</span>
+            </div>
+
+            <div class="nav-section">
+                <span class="section-title">MAIN</span>
+                <a href="{% url 'individual_student_dashboard' %}" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    Overview
+                </a>
+                <a href="{% url 'tasks' %}" class="nav-item active">
+                    <span class="nav-icon">📝</span>Tasks
+                </a>
+                <a href="{% url 'calendar' %}" class="nav-item">
+                    <span class="nav-icon">📅</span>
+                    Calendar
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>Settings
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="section-title">TOOLS</span>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⏲️</span>Focus Timer
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📈</span>Analytics
+                </a>
+            </div>
+
+            <div class="help-center-box">
+                <div class="help-card">
+                    <div class="help-icon">?</div>
+                    <h4>Help Center</h4>
+                    <p>Having trouble in learning? Please contact us for more questions.</p>
+                    <button class="help-btn">Go To Help Center</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="task-detail">
+        <h1>{{ task.title }}</h1>
+        <p><strong>Start Date:</strong> {{ task.start_date }}</p>
+        <p><strong>End Date:</strong> {{ task.end_date|default:"Ongoing" }}</p>
+        <p><strong>Description:</strong></p>
+        <p>{{ task.description }}</p>
+        <a href="{% url 'tasks' %}">&larr; Back to Tasks</a>
+    </div>
+</body>
