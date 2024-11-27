@@ -8,10 +8,12 @@ class CalendarManager {
             document.addEventListener('DOMContentLoaded', () => {
                 this.initializeCalendar();
                 this.initializeHeaderComponents();
+                this.initializeTaskModal();
             });
         } else {
             this.initializeCalendar();
             this.initializeHeaderComponents();
+            this.initializeTaskModal();
         }
     }
 
@@ -86,6 +88,65 @@ class CalendarManager {
         }
     }
 
+    initializeTaskModal() {
+          const modal = document.getElementById('taskModal');
+          const span = document.getElementsByClassName('close')[0];
+          const taskForm = document.getElementById('taskForm');
+
+          document.getElementById('calendarGrid').addEventListener('click', (e) => {
+            if (e.target.classList.contains('calendar-cell')) {
+              const date = e.target.dataset.date;
+              document.getElementById('taskStartDate').value = date;
+              document.getElementById('taskEndDate').min = date;
+              modal.style.display = 'block';
+            }
+          });
+
+          span.onclick = () => {
+            modal.style.display = 'none';
+          };
+
+          window.onclick = (event) => {
+            if (event.target == modal) {
+              modal.style.display = 'none';
+            }
+          };
+
+          taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(taskForm);
+            fetch('/api/tasks/create/', {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Task created successfully!');
+                modal.style.display = 'none';
+                taskForm.reset();
+                this.renderMonthView(); // Refresh the calendar
+              } else {
+                alert('Error creating task: ' + data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('An error occurred while creating the task.');
+            });
+          });
+    }
+
+    formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     renderMonthView() {
         const calendarGrid = document.getElementById('calendarGrid');
         if (!calendarGrid) return;
@@ -128,6 +189,26 @@ class CalendarManager {
             const dayElement = this.createDayElement(day, 'other-month');
             calendarGrid.appendChild(dayElement);
         }
+
+        this.attachCalendarCellListeners();
+
+    }
+
+    attachCalendarCellListeners() {
+        const calendarCells = document.querySelectorAll('.calendar-cell');
+        calendarCells.forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const date = e.currentTarget.dataset.date;
+                this.openTaskModal(date);
+            });
+        });
+    }
+
+    openTaskModal(date) {
+        const modal = document.getElementById('taskModal');
+        document.getElementById('taskStartDate').value = date;
+        document.getElementById('taskEndDate').min = date;
+        modal.style.display = 'block';
     }
 
     renderWeekView() {
@@ -219,6 +300,7 @@ class CalendarManager {
     createDayElement(day, additionalClass = '') {
         const dayElement = document.createElement('div');
         dayElement.className = `calendar-cell ${additionalClass}`;
+        dayElement.dataset.date = this.formatDate(new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day));
         
         const dateSpan = document.createElement('span');
         dateSpan.className = 'date';
