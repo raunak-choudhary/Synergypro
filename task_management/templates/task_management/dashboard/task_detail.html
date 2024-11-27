@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
     <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+    <link rel="stylesheet" href="{% static 'css/task_detail.css' %}">
 </head>
 
 <body>
@@ -59,14 +60,49 @@
                 </div>
             </div>
         </div>
+
+        <div class="detail-task-container">
+            <div class="task-header">
+                <span class="category-tag">{{ task.category }}</span>
+                <h1>{{ task.title }}</h1>
+                <div class="task-dates">
+                    <p>Start Date: {{ task.start_date|date:"M d, Y" }}</p>
+                    <p>End Date: {{ task.end_date|date:"M d, Y" }}</p>
+                </div>
+            </div>
+
+            <div class="task-content">
+                <div class="main-content">
+                    <div class="description-section">
+                        <h2>Description</h2>
+                        <p>{{ task.description }}</p>
+                    </div>
+
+                    <div class="file-upload-section">
+                        <h3>File Task</h3>
+                        <p class="last-modified">Last Modified: {{ task.updated_at|date:"M d, Y" }}</p>
+                        <div class="upload-area" id="uploadArea">
+                            <form id="uploadForm" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="file" id="taskFile" name="file" class="file-input">
+                                <label for="taskFile" class="upload-label">
+                                    <div class="upload-icon">📁</div>
+                                    <span>Click to browse or drag files here</span>
+                                </label>
+                            </form>
+                            {% if task.task_file %}
+                            <div class="file-preview">
+                                <p>Current file: {{ task.task_file.name }}</p>
+                                <a href="{{ task.task_file.url }}" class="download-btn" download>Download File</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="task-detail">
-        <h1>{{ task.title }}</h1>
-        <p><strong>Start Date:</strong> {{ task.start_date }}</p>
-        <p><strong>End Date:</strong> {{ task.end_date|default:"Ongoing" }}</p>
-        <p><strong>Description:</strong></p>
-        <p>{{ task.description }}</p>
-        <a href="{% url 'tasks' %}">&larr; Back to Tasks</a>
-    </div>
+    <script src="{% static 'js/task-detail-manager.js' %}"></script>
+
 </body>
