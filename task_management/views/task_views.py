@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from ..models.task_models import Task
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import json
 
 def tasks_view(request):
     tasks = Task.objects.all().order_by('-created_at')
@@ -51,4 +52,25 @@ def upload_task_file(request, task_id):
                     'error': str(e)
                 }, status=400)
     return JsonResponse({'status': 'error', 'error': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def update_task(request, task_id):
+    if request.method == 'POST':
+        try:
+            task = get_object_or_404(Task, id=task_id)
+            data = json.loads(request.body)
+
+            task.title = data.get('title', task.title)
+            task.start_date = data.get('start_date', task.start_date)
+            task.end_date = data.get('end_date', task.end_date)
+            task.description = data.get('description', task.description)
+
+            task.save()
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
