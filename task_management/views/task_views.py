@@ -82,6 +82,7 @@ def update_task(request, task_id):
             task.start_date = data.get('start_date', task.start_date)
             task.end_date = data.get('end_date', task.end_date)
             task.description = data.get('description', task.description)
+            task.status = data.get('status', task.status)
 
             task.save()
 

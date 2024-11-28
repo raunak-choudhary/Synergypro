@@ -1,36 +1,31 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     function fetchTasks() {
-            fetch('/api/tasks/')
-            .then(response => response.json())
-            .then(data => {
-                if (data.length === 0) {
-                    tasksWrapper.innerHTML = '<p>No tasks found.</p>';
+        fetch('/api/tasks/')
+        .then(response => response.json())
+        .then(data => {
+            const inProgressTasks = document.getElementById('in-progress-tasks');
+            const completedTasks = document.getElementById('completed-tasks');
+            const overdueTasks = document.getElementById('overdue-tasks');
+
+            inProgressTasks.innerHTML = '';
+            completedTasks.innerHTML = '';
+            overdueTasks.innerHTML = '';
+
+            data.forEach(task => {
+                const taskElement = createTaskElement(task);
+                if (task.status === 'completed') {
+                    completedTasks.appendChild(taskElement);
+                } else if (task.is_overdue) {
+                    overdueTasks.appendChild(taskElement);
                 } else {
-                    const inProgressTasks = document.getElementById('in-progress-tasks');
-                    const completedTasks = document.getElementById('completed-tasks');
-                    const overdueTasks = document.getElementById('overdue-tasks');
-
-                    inProgressTasks.innerHTML = '';
-                    completedTasks.innerHTML = '';
-                    overdueTasks.innerHTML = '';
-
-
-                    data.forEach(task => {
-                        const taskElement = createTaskElement(task);
-                        if (task.status === 'completed') {
-                            completedTasks.appendChild(taskElement);
-                        } else if (task.is_overdue) {
-                            overdueTasks.appendChild(taskElement);
-                        } else {
-                            inProgressTasks.appendChild(taskElement);
-                        }
-                    });
+                    inProgressTasks.appendChild(taskElement);
                 }
+            });
 
-                updateArrowVisibility();
-            })
-            .catch(error => console.error('Error fetching tasks:', error));
+            updateArrowVisibility();
+        })
+        .catch(error => console.error('Error fetching tasks:', error));
     }
 
     function createTaskElement(task) {
@@ -47,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (daysLeft < 0) {
             dateDisplay = `<span class="overdue">Overdue</span>`;
         } else if (daysLeft <= 7) {
-            dateDisplay = `${daysLeft} days left`;
+            dateDisplay = `${daysLeft} day(s) left`;
         } else {
             dateDisplay = `Due date: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
         }
@@ -101,8 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Add delete task function
-    function deleteTask(event, taskId) {
-        event.stopPropagation();
+    function deleteTask(taskId) {
 
         if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
             fetch(`/api/task/${taskId}/delete/`, {
@@ -176,10 +170,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Call initially and after tasks are loaded
     updateArrowVisibility();
 
-    // Add this to your fetchTasks function's then block after loading tasks
     setTimeout(updateArrowVisibility, 100);
 
+    function checkForStatusUpdate() {
+        const statusUpdated = sessionStorage.getItem('statusUpdated');
+        if (statusUpdated) {
+            fetchTasks(); // Refresh tasks
+            sessionStorage.removeItem('statusUpdated');
+        }
+    }
+
     fetchTasks();
+    checkForStatusUpdate();
 });
 
 document.querySelector('.scroll-arrow').addEventListener('click', function() {
