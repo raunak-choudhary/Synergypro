@@ -1,32 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     function fetchTasks() {
-        const tasksWrapper = document.getElementById('tasks-wrapper');
-        if (!tasksWrapper) {
-            console.error('Tasks wrapper element not found or is not a valid HTML element');
-            return;
-        }
-        fetch('/api/tasks/')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-
+            fetch('/api/tasks/')
+            .then(response => response.json())
             .then(data => {
-                console.log('Fetched tasks:', data);
-                tasksWrapper.innerHTML = '';
                 if (data.length === 0) {
                     tasksWrapper.innerHTML = '<p>No tasks found.</p>';
                 } else {
+                    const inProgressTasks = document.getElementById('in-progress-tasks');
+                    const completedTasks = document.getElementById('completed-tasks');
+                    const overdueTasks = document.getElementById('overdue-tasks');
+
+                    inProgressTasks.innerHTML = '';
+                    completedTasks.innerHTML = '';
+                    overdueTasks.innerHTML = '';
+
+
                     data.forEach(task => {
                         const taskElement = createTaskElement(task);
-                        tasksWrapper.appendChild(taskElement);
+                        if (task.status === 'completed') {
+                            completedTasks.appendChild(taskElement);
+                        } else if (task.is_overdue) {
+                            overdueTasks.appendChild(taskElement);
+                        } else {
+                            inProgressTasks.appendChild(taskElement);
+                        }
                     });
-                    tasksWrapper.offsetHeight;
                 }
-                console.log('Tasks-wrapper structure:', tasksWrapper.outerHTML);
+
+                updateArrowVisibility();
             })
             .catch(error => console.error('Error fetching tasks:', error));
     }
@@ -53,8 +55,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // TODO: Replace with actual progress
         const progress = Math.floor(Math.random() * 100);
 
+        const statusElement = document.createElement('p');
+        statusElement.className = 'task-status';
+        statusElement.textContent = `Status: ${task.status.replace('_', ' ')}`;
+        taskDiv.appendChild(statusElement);
+
         taskDiv.innerHTML = `
-            <h3>${task.title}</h3>
+            <div class="task-header">
+                <h3>${task.title}</h3>
+                <div class="menu-container">
+                    <button class="menu-dots">⋮</button>
+                    <div class="menu-dropdown">
+                        <button class="menu-item delete-option">Delete</button>
+                    </div>
+                </div>
+            </div>
             <p class="task-description">${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}</p>
             <div class="task-footer">
                 <div class="progress-bar-container">
@@ -65,8 +80,63 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
+        const menuButton = taskDiv.querySelector('.menu-dots');
+        const menuDropdown = taskDiv.querySelector('.menu-dropdown');
+        const deleteButton = taskDiv.querySelector('.delete-option');
+
+        menuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown.classList.toggle('show');
+        });
+
+        deleteButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to delete this task?')) {
+                deleteTask(task.id);
+            }
+        });
+
         taskDiv.addEventListener('click', () => openTaskDetail(task.id));
         return taskDiv;
+    }
+
+    // Add delete task function
+    function deleteTask(event, taskId) {
+        event.stopPropagation();
+
+        if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+            fetch(`/api/task/${taskId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    fetchTasks(); // Refresh the task list
+                } else {
+                    alert('Failed to delete task');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    // Add CSRF token function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
     function openTaskDetail(taskId) {

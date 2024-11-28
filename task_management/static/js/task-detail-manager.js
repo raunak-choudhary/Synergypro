@@ -42,7 +42,19 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                window.location.reload();
+                // Add the new file to the list without reloading the page
+                const fileList = document.getElementById('fileList');
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <p>File: ${file.name}</p>
+                    <a href="${data.file_url}" class="download-btn" download>Download File</a>
+                    <p>Uploaded at: ${new Date().toLocaleString()}</p>
+                `;
+                fileList.appendChild(fileItem);
+
+                // Clear the file input
+                document.getElementById('taskFile').value = '';
             } else {
                 console.error('Upload failed:', data.error);
             }
@@ -56,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const deleteModal = document.getElementById('deleteModal');
     const confirmDelete = document.getElementById('confirmDelete');
     const cancelDelete = document.getElementById('cancelDelete');
-    const taskId = window.location.pathname.split('/')[2];
 
     // Show modal
     deleteBtn.addEventListener('click', function() {
@@ -85,6 +96,5 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => console.error('Error:', error));
-        });
     });
 });

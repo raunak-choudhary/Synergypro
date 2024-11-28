@@ -137,3 +137,67 @@
     padding-bottom: 60px;
 }
 
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.menu-container {
+    position: relative;
+}
+
+.menu-dots {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 1000;
+}
+
+.menu-dropdown.show {
+    display: block;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.delete-option {
+    color: #dc3545;
+}
+
+.delete-option:hover {
+    background: #fff5f5;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.task-status {
+    margin-top: 10px;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.7);
+}

@@ -107,6 +107,15 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select id="editStatus" required>
+                        <option value="yet_to_start" {% if task.status == 'yet_to_start' %}selected{% endif %}>Yet to Start</option>
+                        <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+
                 <div class="delete-modal" id="deleteModal" style="display: none;">
                     <div class="modal-content">
                         <h2 class="delete-modal-content">Delete Task</h2>
@@ -127,8 +136,7 @@
                     </div>
 
                     <div class="file-upload-section">
-                        <h3>File Task</h3>
-                        <p class="last-modified">Last Modified: {{ task.updated_at|date:"M d, Y" }}</p>
+                        <h3>Task Files</h3>
                         <div class="upload-area" id="uploadArea">
                             <form id="uploadForm" method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
@@ -138,12 +146,16 @@
                                     <span>Click to browse or drag files here</span>
                                 </label>
                             </form>
-                            {% if task.task_file %}
-                            <div class="file-preview">
-                                <p>Current file: {{ task.task_file.name }}</p>
-                                <a href="{{ task.task_file.url }}" class="download-btn" download>Download File</a>
+                        </div>
+                        <div class="file-list" id="fileList">
+                            {% for file in task.files.all %}
+                            <div class="file-item">
+                                <p>File: <a href="{{ file.file.url }}" class="download-btn" download>{{ file.file.name }}</a></p>
+                                <p>Uploaded at: {{ file.uploaded_at|date:"M d, Y H:i" }}</p>
                             </div>
-                            {% endif %}
+                            {% empty %}
+                            <p>No files uploaded yet.</p>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
