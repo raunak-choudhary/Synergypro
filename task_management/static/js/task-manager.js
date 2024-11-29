@@ -23,6 +23,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
+             setTimeout(() => {
+                sections.forEach(section => {
+                    const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
+                    if (isScrollable) {
+                        section.rightArrow.style.display = 'flex';
+                        // Only show left arrow if not at the start
+                        section.leftArrow.style.display = section.wrapper.scrollLeft > 0 ? 'flex' : 'none';
+                    }
+                });
+            }, 100);
+
             updateArrowVisibility();
         })
         .catch(error => console.error('Error fetching tasks:', error));
@@ -137,40 +148,70 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = `/task/${taskId}/`;
     }
 
-    const leftArrow = document.querySelector('.left-arrow');
-    const rightArrow = document.querySelector('.right-arrow');
-    const tasksWrapper = document.querySelector('.tasks-wrapper');
+    const sections = [
+        {
+            wrapper: document.getElementById('in-progress-tasks'),
+            leftArrow: document.querySelector('.in-progress-arrow.left-arrow'),
+            rightArrow: document.querySelector('.in-progress-arrow.right-arrow')
+        },
+        {
+            wrapper: document.getElementById('completed-tasks'),
+            leftArrow: document.querySelector('.completed-arrow.left-arrow'),
+            rightArrow: document.querySelector('.completed-arrow.right-arrow')
+        },
+        {
+            wrapper: document.getElementById('overdue-tasks'),
+            leftArrow: document.querySelector('.overdue-arrow.left-arrow'),
+            rightArrow: document.querySelector('.overdue-arrow.right-arrow')
+        }
+    ];
 
-    function updateArrowVisibility() {
-        const isScrollable = tasksWrapper.scrollWidth > tasksWrapper.clientWidth;
-        const isAtStart = tasksWrapper.scrollLeft <= 0;
-        const isAtEnd = tasksWrapper.scrollLeft >= tasksWrapper.scrollWidth - tasksWrapper.clientWidth;
-
-        leftArrow.style.display = isScrollable && !isAtStart ? 'flex' : 'none';
-        rightArrow.style.display = isScrollable && !isAtEnd ? 'flex' : 'none';
-    }
-
-    leftArrow.addEventListener('click', function() {
-        tasksWrapper.scrollBy({
-            left: -300,
-            behavior: 'smooth'
+    sections.forEach(section => {
+        section.leftArrow.addEventListener('click', () => {
+            section.wrapper.scrollBy({
+                left: -300,
+                behavior: 'smooth'
+            });
         });
-    });
 
-    rightArrow.addEventListener('click', function() {
-        tasksWrapper.scrollBy({
-            left: 300,
-            behavior: 'smooth'
+        section.rightArrow.addEventListener('click', () => {
+            section.wrapper.scrollBy({
+                left: 300,
+                behavior: 'smooth'
+            });
         });
+
+        // Update arrow visibility
+        function updateArrowVisibility() {
+             const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
+
+            // Show both arrows by default if content is scrollable
+            if (isScrollable) {
+                section.leftArrow.style.display = 'flex';
+                section.rightArrow.style.display = 'flex';
+            } else {
+                section.leftArrow.style.display = 'none';
+                section.rightArrow.style.display = 'none';
+            }
+
+            // Optionally hide left arrow when at start and right arrow when at end
+            const isAtStart = section.wrapper.scrollLeft <= 0;
+            const isAtEnd = section.wrapper.scrollLeft >= section.wrapper.scrollWidth - section.wrapper.clientWidth;
+
+            if (isScrollable) {
+                if (isAtStart) {
+                    section.leftArrow.style.display = 'none';
+                }
+                if (isAtEnd) {
+                    section.rightArrow.style.display = 'none';
+                }
+            }
+        }
+
+        section.wrapper.addEventListener('scroll', updateArrowVisibility);
+        window.addEventListener('resize', updateArrowVisibility);
+        updateArrowVisibility();
     });
-
-    tasksWrapper.addEventListener('scroll', updateArrowVisibility);
-    window.addEventListener('resize', updateArrowVisibility);
-
-    // Call initially and after tasks are loaded
-    updateArrowVisibility();
-
-    setTimeout(updateArrowVisibility, 100);
 
     function checkForStatusUpdate() {
         const statusUpdated = sessionStorage.getItem('statusUpdated');
