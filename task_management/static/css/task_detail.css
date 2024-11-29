@@ -12,8 +12,10 @@
 
 /* Task Header */
 .task-header {
-    margin-bottom: 2rem;
-    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
 .task-header h5 {
@@ -23,6 +25,17 @@
 .task-header h1 {
     color: #2d3436;
     margin: 1rem 0;
+}
+
+.task-title-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.task-title {
+    margin: 0;
+    padding: 0;
 }
 
 /* Main Content Area */
@@ -153,6 +166,10 @@
 }
 
 .file-input {
+    color: #666;
+}
+
+.file-item {
     color: #666;
 }
 
@@ -342,23 +359,6 @@
     line-height: 1;
 }
 
-.delete-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background 0.3s ease;
-}
-
-.delete-btn:hover {
-    background: #c82333;
-}
-
 .delete-modal-content {
     color: #666;
 }
@@ -441,5 +441,22 @@
 
 .delete-confirm-btn:hover {
     background: #c82333;
+}
+
+#editStatus {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+#editStatus:hover {
+  background-color: #e0e0e0;
+}
+
+#editStatus:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(94, 108, 233, 0.6);
 }
 
