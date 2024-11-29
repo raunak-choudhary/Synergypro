@@ -4,7 +4,7 @@
 
 /* Task Detail Container */
 .detail-task-container {
-    padding: 2rem;
+    padding: 6rem;
     background-color: #f5f5f5;
     margin-left: 250px;
     width: calc(100% - 250px);

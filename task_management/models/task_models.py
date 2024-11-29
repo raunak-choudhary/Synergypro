@@ -23,7 +23,7 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='yet_to_start')
 
     def is_overdue(self):
-        return self.end_date < timezone.now().date() and self.status != 'completed'
+        return self.end_date < timezone.now().date()
 
     def __str__(self):
         return self.title
