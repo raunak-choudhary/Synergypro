@@ -1,0 +1,13 @@
+<div class="articles-section">
+    <h2>Trending Articles</h2>
+    <div class="articles-grid">
+        {% for article in articles %}
+        <div class="article-card">
+            <span class="article-category">{{ article.category }}</span>
+            <h3>{{ article.title }}</h3>
+            <p>{{ article.description }}</p>
+            <a href="{{ article.url }}" target="_blank" class="article-link">Read More →</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
