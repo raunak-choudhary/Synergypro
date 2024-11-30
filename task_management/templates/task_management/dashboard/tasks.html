@@ -13,6 +13,64 @@
 </head>
 
 <body>
+
+    <div class="dashboard-header">
+        <div class="welcome-message">
+            <h1>Tasks</h1>
+        </div>
+
+        <div class="header-right">
+            <!-- Notifications Panel-->
+            <div class="notifications">
+                <div class="notification-trigger" style="padding: 8px; justify-content: center; align-items: center; display: flex;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-badge" style="top: -5px; right: -5px;">1</span>
+                </div>
+
+                <div class="notifications-panel">
+                    <div class="notifications-header">
+                        <h3>Notifications</h3>
+                        <button class="mark-all-read">Mark all as read</button>
+                        <button class="clear-all">Clear All</button>
+                    </div>
+
+                    <div class="notifications-list">
+                        <div class="notification-item unread">
+                            <div class="notification-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22c1-1 1-2 1-3h-2c0 1 0 2 1 3z"></path>
+                                    <path d="M19 17V11a7 7 0 0 0-14 0v6l-2 2h18l-2-2z"></path>
+                                </svg>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-message">Task deadline approaching</p>
+                                <span class="notification-time">Just now</span>
+                            </div>
+                        </div>
+                        <!-- Add more notification items as needed -->
+                    </div>
+                </div>
+            </div>
+            <div class="user-profile" id="profileDropdown">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" class="avatar-img">
+                {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=4B1B7F&color=fff" class="avatar-img">
+                {% endif %}
+                <div class="profile-dropdown-menu">
+                    <a href="{% url 'profile' %}" class="dropdown-item">
+                        <span class="icon">👤</span> Profile
+                    </a>
+                    <a href="{% url 'logout' %}" class="dropdown-item">
+                        <span class="icon">🚪</span> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="dashboard-container">
         <!-- Left Panel -->
         <div class="sidebar">
@@ -120,4 +178,6 @@
     </div>
 
     <script src="{% static 'js/task-manager.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+    <script src="{% static 'js/header-manager.js' %}"></script>
 </body>

@@ -50,12 +50,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
 
         let dateDisplay;
-        if (daysLeft < 0) {
-            dateDisplay = `<span class="overdue">Overdue</span>`;
+        if (task.status === "completed") {
+            dateDisplay = ''
+        } else if (daysLeft < 0) {
+            dateDisplay = `Due: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
         } else if (daysLeft <= 7) {
             dateDisplay = `${daysLeft} day(s) left`;
         } else {
-            dateDisplay = `Due date: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
+            dateDisplay = `Due: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
         }
 
         // TODO: Replace with actual progress
@@ -76,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
-            <p class="task-description">${task.description.substring(0, 100)}${task.description.length > 100 ? '...' : ''}</p>
             <div class="task-footer">
                 <div class="progress-bar-container">
                     <div class="progress-bar" style="width: ${progress}%"></div>
@@ -97,9 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         deleteButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (confirm('Are you sure you want to delete this task?')) {
-                deleteTask(task.id);
-            }
+            deleteTask(task.id);
         });
 
         taskDiv.addEventListener('click', () => openTaskDetail(task.id));

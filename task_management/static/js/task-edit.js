@@ -7,12 +7,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Show modal
     editButton.addEventListener('click', function() {
-        editModal.style.display = 'block';
+        editModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     });
 
     // Hide modal
     cancelButton.addEventListener('click', function() {
         editModal.style.display = 'none';
+        document.body.style.overflow = '';
     });
 
     // Handle form submission

@@ -1,3 +1,53 @@
+.main-content {
+    margin-left: 250px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #2b1a54, #7b2f9d);
+    position: relative;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    backdrop-filter: blur(10px);
+    height: 80px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 250px;
+    z-index: 100;
+}
+
+.welcome-message h1 {
+    color: white;
+    font-size: 32px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.notifications, .user-profile {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.notifications:hover, .user-profile:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 .tasks-container {
     position: absolute;
     left: 250px;
