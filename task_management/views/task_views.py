@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from ..models.task_models import Task, TaskFile
+from ..models.task_models import Task, TaskFile, TaskCategory
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -109,3 +109,59 @@ def delete_task(request, task_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+@csrf_exempt
+def create_category(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+
+            category = TaskCategory.objects.create(
+                user=request.user,
+                name=name
+            )
+
+            return JsonResponse({
+                'status': 'success',
+                'category': {
+                    'id': category.id,
+                    'name': category.name
+                }
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+
+
+def get_user_categories(request):
+    categories = TaskCategory.objects.filter(user=request.user)
+    return JsonResponse({
+        'categories': [
+            {'id': cat.id, 'name': cat.name}
+            for cat in categories
+        ]
+    })
+
+
+@csrf_exempt
+def update_task_category(request, task_id):
+    if request.method == 'POST':
+        try:
+            task = get_object_or_404(Task, id=task_id, user=request.user)
+            data = json.loads(request.body)
+            category_id = data.get('category_id')
+
+            if category_id:
+                category = get_object_or_404(TaskCategory, id=category_id, user=request.user)
+                task.category = category
+            else:
+                task.category = None
+
+            task.save()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)

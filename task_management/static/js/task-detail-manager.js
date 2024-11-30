@@ -105,4 +105,85 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTaskStatus(this.value);
         });
     }
+
+    // Category handling
+    const categorySelect = document.getElementById('taskCategory');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const newCategoryField = document.getElementById('newCategory');
+    const addNewCategoryBtn = document.getElementById('addNewCategory');
+
+    // Load categories from backend
+    function loadCategories() {
+        fetch('/api/tasks/categories/')
+            .then(response => response.json())
+            .then(data => {
+                populateCategories(data.categories);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function populateCategories(categories) {
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            <option value="add_new">+ Add Category</option>
+        `;
+
+        categories.forEach(category => {
+            const option = new Option(category.name, category.id);
+            categorySelect.add(option);
+        });
+    }
+
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'add_new') {
+            newCategoryInput.style.display = 'flex';
+            newCategoryField.focus();
+        } else if (this.value) {
+            newCategoryInput.style.display = 'none';
+            updateTaskCategory(this.value);
+        }
+    });
+
+    addNewCategoryBtn.addEventListener('click', function() {
+        const newCategory = newCategoryField.value.trim();
+        if (newCategory) {
+            fetch('/api/tasks/categories/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ name: newCategory })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    loadCategories();
+                    categorySelect.value = data.category.id;
+                    newCategoryInput.style.display = 'none';
+                    newCategoryField.value = '';
+                    updateTaskCategory(data.category.id);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
+
+    // Initialize categories on page load
+    loadCategories();
+
+     function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 });
