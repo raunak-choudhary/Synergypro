@@ -2,6 +2,7 @@ from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
 from .views.calendar_views import calendar_view, create_task
 from .views.task_views import tasks_view, tasks_api, task_detail_view, upload_task_file, update_task, delete_task
+from .views import help_views
 
 urlpatterns = [
 
@@ -16,6 +17,7 @@ urlpatterns = [
 
     # Dashboard URLs
     path('dashboard/individual/student/', dashboard_views.individual_student_dashboard, name='individual_student_dashboard'),
+    path('dashboard/individual/freelancer/', dashboard_views.individual_freelancer_dashboard, name='individual_freelancer_dashboard'),
     
     # Profile path
     path('profile/', dashboard_views.profile_view, name='profile'),
@@ -41,4 +43,8 @@ urlpatterns = [
     path('task/<int:task_id>/upload/', upload_task_file, name='upload_task_file'),
     path('api/task/<int:task_id>/update/', update_task, name='update_task'),
     path('api/task/<int:task_id>/delete/', delete_task, name='delete_task'),
+
+    #Help Center Page
+    path('help-center/', help_views.help_center_view, name='help_center'),
+    path('api/help-center/analytics', help_views.track_help_center_analytics, name='help_center_analytics'),
 ]

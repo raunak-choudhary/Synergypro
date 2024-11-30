@@ -96,7 +96,7 @@ class CalendarManager {
     }
 
     initializeTaskModal() {
-       const modal = document.getElementById('taskModal');
+        const modal = document.getElementById('taskModal');
         const closeBtn = modal.querySelector('.close');
         const cancelBtn = modal.querySelector('.cancel-btn');
         const taskForm = document.getElementById('taskForm');
@@ -389,9 +389,11 @@ class CalendarManager {
     createDayColumn(date) {
         const dayColumn = document.createElement('div');
         dayColumn.className = 'day-column';
+        
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const isToday = this.isCurrentDay(date);
 
+        // Merge header content into the main header
         const header = document.createElement('div');
         header.className = `week-day-header ${isToday ? 'today' : ''}`;
         header.innerHTML = `
@@ -425,8 +427,8 @@ class CalendarManager {
     isCurrentDay(date) {
         const today = new Date();
         return date.getDate() === today.getDate() &&
-               date.getMonth() === today.getMonth() &&
-               date.getFullYear() === today.getFullYear();
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear();
     }
 
     createDayElement(day, additionalClass = '') {
@@ -494,8 +496,10 @@ class CalendarManager {
         if (prevButton) {
             prevButton.addEventListener('click', () => {
                 if (this.currentView === 'month') {
+                    console.log('Previous month clicked');
                     this.navigateMonth('prev');
                 } else {
+                    console.log('Previous week clicked');
                     this.navigateWeek('prev');
                 }
             });
@@ -504,8 +508,10 @@ class CalendarManager {
         if (nextButton) {
             nextButton.addEventListener('click', () => {
                 if (this.currentView === 'month') {
+                    console.log('Next month clicked');
                     this.navigateMonth('next');
                 } else {
+                    console.log('Next week clicked');
                     this.navigateWeek('next');
                 }
             });

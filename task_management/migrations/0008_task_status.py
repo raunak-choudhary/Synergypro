@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("task_management", "0006_rename_date_task_start_date_task_end_date"),
+        ("task_management", "0007_dailyarticleselection_profilekeywords"),
     ]
 
     operations = [

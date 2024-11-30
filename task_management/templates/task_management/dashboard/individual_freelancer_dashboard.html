@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynergyPro - Student Dashboard</title>
+    <title>Freelancer Dashboard - SynergyPro</title>
     <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
@@ -17,9 +17,10 @@
                 <span class="logo-text">SynergyPro</span>
             </div>
 
+            <!-- Main Navigation -->
             <div class="nav-section">
                 <span class="section-title">MAIN</span>
-                <a href="{% url 'individual_student_dashboard' %}" class="nav-item active">
+                <a href="{% url 'individual_freelancer_dashboard' %}" class="nav-item active">
                     <span class="nav-icon">📊</span>
                     Overview
                 </a>
@@ -37,37 +38,36 @@
                 </a>
             </div>
 
+            <!-- Tools Section -->
             <div class="nav-section">
                 <span class="section-title">TOOLS</span>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">⏲️</span>
-                    Focus Timer
-                </a>
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">📈</span>
-                    Analytics
-                </a>
+                <div class="nav-item">
+                    <span class="nav-icon">👥</span>Client Manager
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📈</span>Analytics
+                </div>
             </div>
-            
-            <!-- Help Center Box -->
+
+            <!-- Help Center -->
             <div class="help-center-box">
                 <div class="help-card">
                     <div class="help-icon">?</div>
                     <h4>Help Center</h4>
                     <p>Having trouble in learning? Please contact us for more questions.</p>
-                    <button class="help-btn">Go To Help Center</button>
+                    <button class="help-btn" id="helpCenterButton" onclick="window.location.href='{% url 'help_center' %}'">Go To Help Center</button>
                 </div>
             </div>
         </nav>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
             <header class="dashboard-header">
                 <div class="welcome-message">
-                    <h1>Hi, {{ user.first_name }} {{ user.last_name }}</h1>
-                    <p>Let's finish your task today!</p>
+                    <h1>Hi, {{ user.first_name }}</h1>
+                    <p>Let's deliver excellence to your clients today!</p>
                 </div>
+
                 <div class="header-right">
                     <!-- Notifications Panel-->
                     <div class="notifications">
@@ -118,40 +118,40 @@
                             </a>
                         </div>
                     </div>
-                </div>
+                </div>    
             </header>
 
             <!-- Dashboard Content -->
             <div class="dashboard-content">
-                <!-- Stats Overview -->
+                <!-- Stats Section -->
                 <div class="stats-section">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Tasks</span>
-                            <span class="stat-value">{{ total_tasks }}</span>
+                            <div class="stat-title">Active Projects</div>
+                            <div class="stat-value">{{ active_projects }}</div>
                         </div>
-                        <span class="stat-trend">↑ 12% from last week</span>
+                        <div class="stat-trend">↑ 2 from last month</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">In Progress</span>
-                            <span class="stat-value">{{ in_progress }}</span>
+                            <div class="stat-title">Pending Deliverables</div>
+                            <div class="stat-value">{{ pending_deliverables }}</div>
                         </div>
-                        <span class="stat-trend">Current Focus</span>
+                        <div class="stat-trend">Current Priority</div>
                     </div>
 
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Completed</span>
-                            <span class="stat-value">{{ completed }}</span>
+                            <div class="stat-title">Completed Projects</div>
+                            <div class="stat-value">{{ completed_projects }}</div>
                         </div>
-                        <span class="stat-trend">3 today</span>
+                        <div class="stat-trend">2 this month</div>
                     </div>
                 </div>
 
-                <!-- Main Dashboard Grid -->
-                <div class="dashboard-grid">
+                 <!-- Main Dashboard Grid -->
+                 <div class="dashboard-grid">
                     <!-- Tasks Section -->
                     <section class="tasks-panel">
                         <!-- Content will be added here -->
@@ -162,36 +162,32 @@
                         <!-- Content will be added here -->
                     </section>
                 </div>
-                                
-                
-                <!-- Task Cards -->
+
+                <!-- Project Cards -->
                 <div class="task-cards">
-                    <!-- Running Task -->
                     <div class="task-card running">
-                        <h3>Running Task</h3>
+                        <h3>Current Project</h3>
                         <div class="task-stats">
                             <span class="task-number">65%</span>
                             <div class="progress-container">
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: 65%"></div>
                                 </div>
-                                <span class="total-tasks">100% Total</span>
+                                <span class="total-tasks">Project Timeline: 2 weeks remaining</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Upcoming Task -->
                     <div class="task-card upcoming">
-                        <h3>Upcoming Task</h3>
+                        <h3>Next Project</h3>
                         <div class="task-stats">
                             <div class="task-info">
-                                <img src="https://placehold.co/100x60/2a2a40/FFFFFF/png?text=Mobile+App" 
-                                    alt="Mobile App Design Task" 
-                                    class="task-image"
-                                    style="border-radius: 8px; object-fit: cover;">
+                                <img src="https://placehold.co/100x60/2a2a40/FFFFFF/png?text=Project" 
+                                     alt="Project" class="task-image"
+                                     style="border-radius: 8px; object-fit: cover;">
                                 <div class="task-details">
-                                    <h4>Creating Mobile App Design</h4>
-                                    <span class="task-type">UI/UX Design</span>
+                                    <h4>E-commerce Website</h4>
+                                    <span class="task-type">Web Development</span>
                                 </div>
                             </div>
                             <div class="progress-container">
@@ -199,7 +195,7 @@
                                     <div class="progress-fill" style="width: 0%"></div>
                                 </div>
                                 <div class="progress-info">
-                                    <span>Progress</span>
+                                    <span>Starting next week</span>
                                     <span>0%</span>
                                 </div>
                             </div>
@@ -209,7 +205,7 @@
             </div>
         </main>
     </div>
-    
+
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
 </body>

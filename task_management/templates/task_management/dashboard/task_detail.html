@@ -97,26 +97,16 @@
             </a>
         </div>
 
-        <div class="nav-section">
-            <span class="section-title">TOOLS</span>
-            <a href="#" class="nav-item">
-                <span class="nav-icon">⏲️</span>Focus Timer
-            </a>
-            <a href="#" class="nav-item">
-                <span class="nav-icon">📈</span>Analytics
-            </a>
-        </div>
-
         <div class="help-center-box">
             <div class="help-card">
                 <div class="help-icon">?</div>
                 <h4>Help Center</h4>
                 <p>Having trouble in learning? Please contact us for more questions.</p>
-                <button class="help-btn">Go To Help Center</button>
+                <button class="help-btn" id="helpCenterButton" onclick="window.location.href='{% url 'help_center' %}'">Go To Help Center</button>
             </div>
         </div>
     </div>
-     <div class="dashboard-container">
+    <div class="dashboard-container">
         <div class="detail-task-container">
             <div class="back-section">
                 <a href="{% url 'tasks' %}" class="back-button">
@@ -125,7 +115,7 @@
             </div>
 
             <div class="task-header">
-                 <div class="header-content">
+                <div class="header-content">
                     <h1>
                         {{ task.title }}
                         <div class="task-actions">
@@ -138,7 +128,7 @@
                         </div>
                     </h1>
                     <h5>Due: {{ task.end_date }}</h5>
-                   <div class="status-group">
+                    <div class="status-group">
                         <label for="editStatus" class="status-label">Status</label>
                         <select id="editStatus" required>
                             <option value="yet_to_start" {% if task.status == 'yet_to_start' %}selected{% endif %}>Yet to Start</option>
