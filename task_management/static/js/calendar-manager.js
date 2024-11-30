@@ -88,63 +88,140 @@ class CalendarManager {
         }
     }
 
+    validateDateTime(dateString, timeString) {
+        if (!dateString || !timeString) return false;
+
+        const dateTime = new Date(`${dateString}T${timeString}`);
+        return dateTime instanceof Date && !isNaN(dateTime);
+    }
+
     initializeTaskModal() {
-          const modal = document.getElementById('taskModal');
-          const span = document.getElementsByClassName('close')[0];
-          const taskForm = document.getElementById('taskForm');
+       const modal = document.getElementById('taskModal');
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('.cancel-btn');
+        const taskForm = document.getElementById('taskForm');
 
-          document.getElementById('calendarGrid').addEventListener('click', (e) => {
-            if (e.target.classList.contains('calendar-cell')) {
-              const date = e.target.dataset.date;
-              document.getElementById('taskStartDate').value = date;
-              document.getElementById('taskEndDate').min = date;
-              modal.style.display = 'block';
-            }
-          });
-
-          span.onclick = () => {
-            modal.style.display = 'none';
-          };
-
-          window.onclick = (event) => {
-            if (event.target == modal) {
-              modal.style.display = 'none';
-            }
-          };
-
-          taskForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const formData = new FormData(taskForm);
-            fetch('/api/tasks/create/', {
-              method: 'POST',
-              body: formData,
-              headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              if (data.success) {
-                alert('Task created successfully!');
+        // Close modal handlers
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
                 modal.style.display = 'none';
                 taskForm.reset();
-                this.renderMonthView(); // Refresh the calendar
-              } else {
-                alert('Error creating task: ' + data.error);
-              }
-            })
-            .catch(error => {
-              console.error('Error:', error);
-              alert('An error occurred while creating the task.');
             });
-          });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+                taskForm.reset();
+            });
+        }
+
+        // Close on outside click
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                taskForm.reset();
+            }
+        });
+
+        function isValidDate(dateString) {
+            return !isNaN(new Date(dateString).getTime());
+        };
+
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Get form values
+            const title = document.getElementById('taskTitle').value;
+            const startDate = document.getElementById('taskStartDate').value;
+            const startTime = document.getElementById('taskStartTime').value;
+            const endDate = document.getElementById('taskEndDate').value;
+            const endTime = document.getElementById('taskEndTime').value;
+
+            // Create timezone-aware datetime strings
+            const startDateTime = new Date(`${startDate}T${startTime}`);
+            const endDateTime = new Date(`${endDate}T${endTime}`);
+
+            // Add timezone offset to make them timezone-aware
+            const startDateTimeString = startDateTime.toISOString();
+            const endDateTimeString = endDateTime.toISOString();
+
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('start_date', startDateTimeString);
+            formData.append('end_date', endDateTimeString);
+            formData.append('description', document.getElementById('taskDescription').value || '');
+            formData.append('status', 'yet_to_start');
+
+            try {
+                const response = await fetch('/api/tasks/create/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Task created successfully!');
+                    modal.style.display = 'none';
+                    taskForm.reset();
+                    this.renderMonthView();
+                } else {
+                    console.log(data);
+                    alert('Error creating task: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while creating the task.');
+            }
+        });
+    }
+
+    openTaskModal(dateTime) {
+        const modal = document.getElementById('taskModal');
+        const startDateInput = document.getElementById('taskStartDate');
+        const startTimeInput = document.getElementById('taskStartTime');
+        const endDateInput = document.getElementById('taskEndDate');
+        const endTimeInput = document.getElementById('taskEndTime');
+
+        // Ensure dateTime is a valid Date object
+        const date = dateTime instanceof Date ? dateTime : new Date(dateTime);
+
+        if (!(date instanceof Date && !isNaN(date))) {
+            console.error('Invalid date format');
+            return;
+        }
+
+        // Format date and time
+        const formattedDate = this.formatDate(date);
+        const formattedTime = date.getHours().toString().padStart(2, '0') + ':00';
+
+        // Set default values
+        startDateInput.value = formattedDate;
+        startTimeInput.value = formattedTime;
+
+        // Set end date and time (default to 1 hour later)
+        const endDate = new Date(date);
+        endDate.setHours(date.getHours() + 1);
+        endDateInput.value = this.formatDate(endDate);
+        endTimeInput.value = endDate.getHours().toString().padStart(2, '0') + ':00';
+
+        modal.style.display = 'block';
     }
 
     formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        try {
+            if (!(date instanceof Date) || isNaN(date)) {
+                throw new Error('Invalid date');
+            }
+            return date.toISOString().split('T')[0];
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return '';
+        }
     }
 
     renderMonthView() {
@@ -204,11 +281,61 @@ class CalendarManager {
         });
     }
 
-    openTaskModal(date) {
+    openTaskModal(dateTime) {
         const modal = document.getElementById('taskModal');
-        document.getElementById('taskStartDate').value = date;
-        document.getElementById('taskEndDate').min = date;
+        const startDateInput = document.getElementById('taskStartDate');
+        const startTimeInput = document.getElementById('taskStartTime');
+
+        // Ensure dateTime is a Date object
+        const date = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
+
+        // Format date and time
+        const formattedDate = this.formatDate(date);
+        const formattedTime = date.getHours().toString().padStart(2, '0') + ':00';
+
+        // Set values
+        if (startDateInput) {
+            startDateInput.value = formattedDate;
+        }
+        if (startTimeInput) {
+            startTimeInput.value = formattedTime;
+        }
+
+        // Set minimum date for end date input
+        const endDateInput = document.getElementById('taskEndDate');
+        if (endDateInput) {
+            endDateInput.min = formattedDate;
+        }
+
+        // Update modal title and show
+        const modalTitle = modal.querySelector('h2');
+        if (modalTitle) {
+            modalTitle.textContent = 'Create Task';
+        }
+
         modal.style.display = 'block';
+    }
+
+    formatDate(date) {
+        // Add type check to prevent errors
+        if (!(date instanceof Date)) {
+            return '';
+        }
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    attachCalendarCellListeners() {
+        const calendarCells = document.querySelectorAll('.calendar-cell');
+        calendarCells.forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                const dateStr = e.currentTarget.dataset.date;
+                const date = new Date(dateStr);
+                this.openTaskModal(date);
+            });
+        });
     }
 
     renderWeekView() {
@@ -262,11 +389,9 @@ class CalendarManager {
     createDayColumn(date) {
         const dayColumn = document.createElement('div');
         dayColumn.className = 'day-column';
-        
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const isToday = this.isCurrentDay(date);
-        
-        // Merge header content into the main header
+
         const header = document.createElement('div');
         header.className = `week-day-header ${isToday ? 'today' : ''}`;
         header.innerHTML = `
@@ -276,17 +401,24 @@ class CalendarManager {
             </div>
         `;
         dayColumn.appendChild(header);
-        
-        // Hour slots
+
+        // Hour slots with time selection
         for (let hour = 0; hour < 24; hour++) {
             const hourSlot = document.createElement('div');
             hourSlot.className = 'hour-slot';
             if (isToday && new Date().getHours() === hour) {
                 hourSlot.classList.add('current-hour');
             }
+
+            hourSlot.addEventListener('click', () => {
+                const selectedDateTime = new Date(date);
+                selectedDateTime.setHours(hour);
+                this.openTaskModal(selectedDateTime);
+            });
+
             dayColumn.appendChild(hourSlot);
         }
-        
+
         return dayColumn;
     }
 
@@ -362,10 +494,8 @@ class CalendarManager {
         if (prevButton) {
             prevButton.addEventListener('click', () => {
                 if (this.currentView === 'month') {
-                    console.log('Previous month clicked');
                     this.navigateMonth('prev');
                 } else {
-                    console.log('Previous week clicked');
                     this.navigateWeek('prev');
                 }
             });
@@ -374,10 +504,8 @@ class CalendarManager {
         if (nextButton) {
             nextButton.addEventListener('click', () => {
                 if (this.currentView === 'month') {
-                    console.log('Next month clicked');
                     this.navigateMonth('next');
                 } else {
-                    console.log('Next week clicked');
                     this.navigateWeek('next');
                 }
             });
@@ -494,6 +622,72 @@ class CalendarManager {
         this.currentDate = newDate;
         this.updateCalendarHeader();
         this.renderWeekView();
+    }
+
+    createDayColumn(date) {
+        const dayColumn = document.createElement('div');
+        dayColumn.className = 'day-column';
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const isToday = this.isCurrentDay(date);
+
+        // Create header
+        const header = document.createElement('div');
+        header.className = `week-day-header ${isToday ? 'today' : ''}`;
+        header.innerHTML = `
+            <div class="day-header-content">
+                <span class="weekday">${days[date.getDay()]}</span>
+                <span class="date">${date.getDate()}</span>
+            </div>
+        `;
+        dayColumn.appendChild(header);
+
+        // Create hour slots with click handlers
+        for (let hour = 0; hour < 24; hour++) {
+            const hourSlot = document.createElement('div');
+            hourSlot.className = 'hour-slot';
+            if (isToday && new Date().getHours() === hour) {
+                hourSlot.classList.add('current-hour');
+            }
+
+            // Add click handler for time selection
+            hourSlot.addEventListener('click', () => {
+                const selectedDateTime = new Date(date);
+                selectedDateTime.setHours(hour, 0, 0, 0);
+                this.openTaskModal(selectedDateTime);
+            });
+
+            dayColumn.appendChild(hourSlot);
+        }
+
+        return dayColumn;
+    }
+
+    openTaskModal(dateTime) {
+        const modal = document.getElementById('taskModal');
+        const startDateInput = document.getElementById('taskStartDate');
+        const startTimeInput = document.getElementById('taskStartTime');
+
+        // Format date and time
+        const formattedDate = this.formatDate(dateTime);
+        const formattedTime = dateTime.getHours().toString().padStart(2, '0') + ':00';
+
+        // Set values
+        startDateInput.value = formattedDate;
+        startTimeInput.value = formattedTime;
+
+        // Update modal title and show
+        const modalTitle = modal.querySelector('h2');
+        if (modalTitle) {
+            modalTitle.textContent = 'Create Task';
+        }
+
+        modal.style.display = 'block';
+    }
+
+    addHour(time) {
+        const [hours, minutes] = time.split(':');
+        const newHours = (parseInt(hours) + 1) % 24;
+        return `${String(newHours).padStart(2, '0')}:${minutes}`;
     }
 
     initializeNotifications() {

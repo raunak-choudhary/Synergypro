@@ -3,6 +3,7 @@ from ..models.task_models import Task, TaskFile
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.utils.dateparse import parse_datetime
 
 def tasks_view(request):
     tasks = Task.objects.all().order_by('-created_at')
@@ -15,8 +16,8 @@ def tasks_api(request):
             'id': task.id,
             'title': task.title,
             'description': task.description,
-            'start_date': task.start_date.strftime('%Y-%m-%d'),
-            'end_date': task.end_date.strftime('%Y-%m-%d') if task.end_date else None,
+            'start_date': task.start_date.isoformat() if task.start_date else None,
+            'end_date': task.end_date.isoformat() if task.end_date else None,
             'status': task.status,
             'is_overdue': task.is_overdue(),
         }
@@ -78,9 +79,15 @@ def update_task(request, task_id):
             task = get_object_or_404(Task, id=task_id)
             data = json.loads(request.body)
 
+            start_date = parse_datetime(data.get('start_date')) if data.get('start_date') else task.start_date
+            end_date = parse_datetime(data.get('end_date')) if data.get('end_date') else task.end_date
+
+            if start_date:
+                task.start_date = start_date
+            if end_date:
+                task.end_date = end_date
+
             task.title = data.get('title', task.title)
-            task.start_date = data.get('start_date', task.start_date)
-            task.end_date = data.get('end_date', task.end_date)
             task.description = data.get('description', task.description)
             task.status = data.get('status', task.status)
 

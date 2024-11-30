@@ -579,3 +579,45 @@
 #taskForm button:hover {
     background-color: #45a049;
 }
+
+.datetime-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.datetime-group input {
+    flex: 1;
+}
+
+.hour-slot {
+    height: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.hour-slot:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.current-hour {
+    background-color: rgba(108, 92, 231, 0.2);
+}
+
+.datetime-inputs {
+    display: flex;
+    gap: 1rem;
+}
+
+.datetime-inputs input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.datetime-inputs input[type="time"] {
+    min-width: 120px;
+}

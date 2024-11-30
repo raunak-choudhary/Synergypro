@@ -32,8 +32,8 @@ def create_task(request):
         return JsonResponse({'success': False, 'error': 'Title and start date are required.'})
 
     try:
-        start_date = parse_date(start_date)
-        end_date = parse_date(end_date) if end_date else None
+        start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00')).date()
+        end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00')).date() if end_date else None
 
         if not start_date:
             raise ValueError("Invalid start date format")
