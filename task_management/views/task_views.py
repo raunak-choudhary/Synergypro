@@ -6,7 +6,7 @@ import json
 from django.utils.dateparse import parse_datetime
 
 def tasks_view(request):
-    tasks = Task.objects.all().order_by('-created_at')
+    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'task_management/dashboard/tasks.html', {'tasks': tasks})
 
 def tasks_api(request):
@@ -30,7 +30,7 @@ def tasks_api(request):
     return JsonResponse(tasks_data, safe=False)
 
 def get_task_files(request, task_id):
-    task = get_object_or_404(Task, id=task_id)
+    task = get_object_or_404(Task, id=task_id, user=request.user)
     files = task.files.all()
     files_data = [
         {
@@ -46,7 +46,7 @@ def get_task_files(request, task_id):
 @csrf_exempt
 def upload_task_file(request, task_id):
     if request.method == 'POST':
-        task = get_object_or_404(Task, id=task_id)
+        task = get_object_or_404(Task, id=task_id, user=request.user)
         if 'file' in request.FILES:
             file = request.FILES['file']
             task_file = TaskFile.objects.create(task=task, file=file)
@@ -61,7 +61,7 @@ def upload_task_file(request, task_id):
 def delete_task_file(request, file_id):
     if request.method == 'DELETE':
         try:
-            file = get_object_or_404(TaskFile, id=file_id)
+            file = get_object_or_404(TaskFile, id=file_id, task__user=request.user)
             file.delete()
             return JsonResponse({'status': 'success'})
         except Exception as e:
@@ -118,7 +118,7 @@ def task_detail_view(request, task_id):
 def delete_task(request, task_id):
     if request.method == 'DELETE':
         try:
-            task = get_object_or_404(Task, id=task_id)
+            task = get_object_or_404(Task, id=task_id, user=request.user)
             task.delete()
             return JsonResponse({'status': 'success'})
         except Exception as e:
