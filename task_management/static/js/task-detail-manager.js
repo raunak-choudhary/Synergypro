@@ -134,6 +134,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function updateTaskCategory(categoryId) {
+        const taskId = window.location.pathname.split('/')[2];
+        fetch(`/api/task/${taskId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                category_id: categoryId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update was successful
+                console.log('Category updated successfully');
+            } else {
+                alert('Failed to update category');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Handle category selection
     categorySelect.addEventListener('change', function() {
         if (this.value === 'add_new') {
             newCategoryInput.style.display = 'flex';
@@ -144,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Handle new category addition
     addNewCategoryBtn.addEventListener('click', function() {
         const newCategory = newCategoryField.value.trim();
         if (newCategory) {
@@ -153,16 +179,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ name: newCategory })
+                body: JSON.stringify({
+                    name: newCategory
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    loadCategories();
+                    // Add new option to dropdown
+                    const option = new Option(newCategory, data.category.id);
+                    categorySelect.add(option);
+
+                    // Select the new category
                     categorySelect.value = data.category.id;
+
+                    // Update task with new category
+                    updateTaskCategory(data.category.id);
+
+                    // Hide input
                     newCategoryInput.style.display = 'none';
                     newCategoryField.value = '';
-                    updateTaskCategory(data.category.id);
                 }
             })
             .catch(error => console.error('Error:', error));

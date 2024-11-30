@@ -14,10 +14,9 @@ class TaskCategory(models.Model):
 
     class Meta:
         unique_together = ['user', 'name']
-        verbose_name_plural = 'Task Categories'
 
     def __str__(self):
-        return f"{self.user.username} - {self.name}"
+        return self.name
 
 class Task(models.Model):
     STATUS_CHOICES = [

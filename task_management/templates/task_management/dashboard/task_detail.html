@@ -137,12 +137,12 @@
                         </select>
                     </div>
 
-                    <div class="category-group">
+                   <div class="category-group">
                         <label for="taskCategory" class="category-label">Category</label>
                         <select id="taskCategory">
                             <option value="">Select Category</option>
                             <option value="add_new">+ Add Category</option>
-                            {% for category in user_categories %}
+                            {% for category in categories %}
                                 <option value="{{ category.id }}" {% if task.category_id == category.id %}selected{% endif %}>
                                     {{ category.name }}
                                 </option>
