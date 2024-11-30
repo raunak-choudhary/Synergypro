@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('taskFile');
     const uploadForm = document.getElementById('uploadForm');
     const taskId = window.location.pathname.split('/')[2];
+    const savedCategory = localStorage.getItem(`task_${taskId}_category`);
+
+    if (savedCategory) {
+        categorySelect.value = savedCategory;
+    }
 
     // Handle drag and drop
     uploadArea.addEventListener('dragover', (e) => {
@@ -104,5 +109,143 @@ document.addEventListener('DOMContentLoaded', function() {
         statusDropdown.addEventListener('change', function() {
             updateTaskStatus(this.value);
         });
+    }
+
+    // Category handling
+    const categorySelect = document.getElementById('taskCategory');
+    const newCategoryInput = document.getElementById('newCategoryInput');
+    const newCategoryField = document.getElementById('newCategory');
+    const addNewCategoryBtn = document.getElementById('addNewCategory');
+
+    // Handle category selection
+    categorySelect.addEventListener('change', function() {
+        if (this.value === 'add_new') {
+            newCategoryInput.style.display = 'flex';
+            newCategoryField.focus();
+        } else if (this.value) {
+            newCategoryInput.style.display = 'none';
+            updateTaskCategory(this.value);
+        }
+    });
+
+    // Handle new category addition
+    addNewCategoryBtn.addEventListener('click', function() {
+        const newCategory = newCategoryField.value.trim();
+        if (newCategory) {
+            fetch('/api/tasks/categories/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    name: newCategory
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Add new option to dropdown
+                    const option = new Option(newCategory, data.category.id);
+                    categorySelect.add(option);
+
+                    // Select the new category
+                    categorySelect.value = data.category.id;
+
+                    // Update task with new category
+                    updateTaskCategory(data.category.id);
+
+                    // Hide input and clear field
+                    newCategoryInput.style.display = 'none';
+                    newCategoryField.value = '';
+                } else {
+                    alert('Failed to create category: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create category');
+            });
+        }
+    });
+
+    // Load categories from backend
+    function loadCategories() {
+        fetch('/api/tasks/categories/')
+            .then(response => response.json())
+            .then(data => {
+                populateCategories(data.categories);
+
+                // Get the task's current category from the select element's data
+                const currentCategoryId = categorySelect.getAttribute('data-current-category');
+                if (currentCategoryId) {
+                    categorySelect.value = currentCategoryId;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function populateCategories(categories) {
+        const currentValue = categorySelect.value;
+
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            <option value="add_new">+ Add Category</option>
+        `;
+
+        categories.forEach(category => {
+            const option = new Option(category.name, category.id);
+            if (category.id === currentValue) {
+                option.selected = true;
+            }
+            categorySelect.add(option);
+        });
+    }
+
+    function updateTaskCategory(categoryId) {
+        const taskId = window.location.pathname.split('/')[2];
+        fetch(`/api/task/${taskId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                category_id: categoryId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update the select element's data attribute
+                categorySelect.setAttribute('data-current-category', categoryId);
+                console.log('Category updated successfully');
+            } else {
+                alert('Failed to update category');
+                loadCategories(); // Reload categories on failure
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadCategories(); // Reload categories on error
+        });
+    }
+
+    // Initialize categories on page load
+    loadCategories();
+
+     function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 });

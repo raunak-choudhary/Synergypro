@@ -1,7 +1,7 @@
 from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
 from .views.calendar_views import calendar_view, create_task
-from .views.task_views import tasks_view, tasks_api, task_detail_view, upload_task_file, update_task, delete_task
+from .views.task_views import tasks_view, tasks_api, task_detail_view, upload_task_file, update_task, delete_task, get_user_categories, create_category, update_task_category
 from .views import help_views
 
 urlpatterns = [
@@ -47,4 +47,9 @@ urlpatterns = [
     #Help Center Page
     path('help-center/', help_views.help_center_view, name='help_center'),
     path('api/help-center/analytics', help_views.track_help_center_analytics, name='help_center_analytics'),
+
+    # Category support
+    path('api/tasks/categories/', get_user_categories, name='get_user_categories'),
+    path('api/tasks/categories/create/', create_category, name='create_category'),
+    path('api/task/<int:task_id>/update/', update_task, name='update_task'),
 ]
