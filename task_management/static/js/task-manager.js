@@ -330,6 +330,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize categories and tasks
     loadCategories();
     fetchTasks();
+
+    function initializeLogout() {
+        const logoutLink = document.querySelector('a[href*="logout"]');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/api/logout/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+                    if (response.ok) {
+                        window.location.href = '/';
+                    }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            });
+        }
+    }
+
+    initializeLogout();
 });
 
 document.querySelector('.scroll-arrow').addEventListener('click', function() {
