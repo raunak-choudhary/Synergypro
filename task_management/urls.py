@@ -51,5 +51,5 @@ urlpatterns = [
     # Category support
     path('api/tasks/categories/', get_user_categories, name='get_user_categories'),
     path('api/tasks/categories/create/', create_category, name='create_category'),
-    path('api/task/<int:task_id>/category/', update_task_category, name='update_task_category'),
+    path('api/task/<int:task_id>/update/', update_task, name='update_task'),
 ]

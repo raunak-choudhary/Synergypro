@@ -139,7 +139,7 @@
 
                    <div class="category-group">
                         <label for="taskCategory" class="category-label">Category</label>
-                        <select id="taskCategory">
+                        <select id="taskCategory" data-current-category="{{ task.category.id|default:'' }}">
                             <option value="">Select Category</option>
                             <option value="add_new">+ Add Category</option>
                             {% for category in categories %}

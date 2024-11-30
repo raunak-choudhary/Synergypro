@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('taskFile');
     const uploadForm = document.getElementById('uploadForm');
     const taskId = window.location.pathname.split('/')[2];
+    const savedCategory = localStorage.getItem(`task_${taskId}_category`);
+
+    if (savedCategory) {
+        categorySelect.value = savedCategory;
+    }
 
     // Handle drag and drop
     uploadArea.addEventListener('dragover', (e) => {
@@ -112,52 +117,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const newCategoryField = document.getElementById('newCategory');
     const addNewCategoryBtn = document.getElementById('addNewCategory');
 
-    // Load categories from backend
-    function loadCategories() {
-        fetch('/api/tasks/categories/')
-            .then(response => response.json())
-            .then(data => {
-                populateCategories(data.categories);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function populateCategories(categories) {
-        categorySelect.innerHTML = `
-            <option value="">Select Category</option>
-            <option value="add_new">+ Add Category</option>
-        `;
-
-        categories.forEach(category => {
-            const option = new Option(category.name, category.id);
-            categorySelect.add(option);
-        });
-    }
-
-    function updateTaskCategory(categoryId) {
-        const taskId = window.location.pathname.split('/')[2];
-        fetch(`/api/task/${taskId}/update/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                category_id: categoryId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Update was successful
-                console.log('Category updated successfully');
-            } else {
-                alert('Failed to update category');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
     // Handle category selection
     categorySelect.addEventListener('change', function() {
         if (this.value === 'add_new') {
@@ -196,14 +155,81 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Update task with new category
                     updateTaskCategory(data.category.id);
 
-                    // Hide input
+                    // Hide input and clear field
                     newCategoryInput.style.display = 'none';
                     newCategoryField.value = '';
+                } else {
+                    alert('Failed to create category: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to create category');
+            });
+        }
+    });
+
+    // Load categories from backend
+    function loadCategories() {
+        fetch('/api/tasks/categories/')
+            .then(response => response.json())
+            .then(data => {
+                populateCategories(data.categories);
+
+                // Get the task's current category from the select element's data
+                const currentCategoryId = categorySelect.getAttribute('data-current-category');
+                if (currentCategoryId) {
+                    categorySelect.value = currentCategoryId;
                 }
             })
             .catch(error => console.error('Error:', error));
-        }
-    });
+    }
+
+    function populateCategories(categories) {
+        const currentValue = categorySelect.value;
+
+        categorySelect.innerHTML = `
+            <option value="">Select Category</option>
+            <option value="add_new">+ Add Category</option>
+        `;
+
+        categories.forEach(category => {
+            const option = new Option(category.name, category.id);
+            if (category.id === currentValue) {
+                option.selected = true;
+            }
+            categorySelect.add(option);
+        });
+    }
+
+    function updateTaskCategory(categoryId) {
+        const taskId = window.location.pathname.split('/')[2];
+        fetch(`/api/task/${taskId}/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                category_id: categoryId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update the select element's data attribute
+                categorySelect.setAttribute('data-current-category', categoryId);
+                console.log('Category updated successfully');
+            } else {
+                alert('Failed to update category');
+                loadCategories(); // Reload categories on failure
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadCategories(); // Reload categories on error
+        });
+    }
 
     // Initialize categories on page load
     loadCategories();

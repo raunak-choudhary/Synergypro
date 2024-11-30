@@ -51,22 +51,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let dateDisplay;
         if (task.status === "completed") {
-            dateDisplay = ''
+            dateDisplay = '';
         } else if (daysLeft < 0) {
-            dateDisplay = `Due: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
+            dateDisplay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 4px; display: inline-block;">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+            </svg>${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
         } else if (daysLeft <= 7) {
             dateDisplay = `${daysLeft} day(s) left`;
         } else {
-            dateDisplay = `Due: ${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
+            dateDisplay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 4px; display: inline-block;">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+            </svg>${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
         }
 
         // TODO: Replace with actual progress
         const progress = Math.floor(Math.random() * 100);
 
+
+
         const statusElement = document.createElement('p');
         statusElement.className = 'task-status';
         statusElement.textContent = `Status: ${task.status.replace('_', ' ')}`;
         taskDiv.appendChild(statusElement);
+
+        // Generate dynamic colors based on category name
+        function generatePastelColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            // Generate pastel background color
+            const h = hash % 360;
+            const s = 30 + (hash % 30); // Keep saturation low for pastel
+            const l = 85 + (hash % 10); // Keep lightness high for pastel
+
+            // Generate darker text color with same hue
+            const textL = 30; // Darker text for contrast
+
+            return {
+                background: `hsl(${h}, ${s}%, ${l}%)`,
+                text: `hsl(${h}, ${s}%, ${textL}%)`
+            };
+        }
+
+        let categoryHTML = '';
+        if (task.category) {
+            const colors = generatePastelColor(task.category.name);
+            categoryHTML = `
+                <div class="category-tag" style="background-color: ${colors.background}; color: ${colors.text}">
+                    ${task.category.name}
+                </div>
+            `;
+        }
 
         taskDiv.innerHTML = `
             <div class="task-header">
@@ -78,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             </div>
+            ${categoryHTML}
             <div class="task-footer">
                 <div class="progress-bar-container">
                     <div class="progress-bar" style="width: ${progress}%"></div>
@@ -222,6 +260,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fetchTasks();
     checkForStatusUpdate();
+
+    // Add at the beginning of your DOMContentLoaded event
+    const categoryFilter = document.getElementById('categoryFilter');
+    let allTasks = []; // Store all tasks
+
+    function loadCategories() {
+        fetch('/api/tasks/categories/')
+            .then(response => response.json())
+            .then(data => {
+                const categories = data.categories;
+                categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+                if (categories.length === 0) {
+                    const option = new Option('No categories', '');
+                    option.disabled = true;
+                    categoryFilter.add(option);
+                } else {
+                    categories.forEach(category => {
+                        categoryFilter.add(new Option(category.name, category.id));
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading categories:', error));
+    }
+
+    // Modify your fetchTasks function
+    function fetchTasks() {
+        fetch('/api/tasks/')
+            .then(response => response.json())
+            .then(data => {
+                allTasks = data; // Store all tasks
+                filterTasks();
+            })
+            .catch(error => console.error('Error fetching tasks:', error));
+    }
+
+    function filterTasks() {
+        const selectedCategoryId = categoryFilter.value;
+        const filteredTasks = selectedCategoryId ?
+            allTasks.filter(task => task.category && task.category.id.toString() === selectedCategoryId) :
+            allTasks;
+
+        const inProgressTasks = document.getElementById('in-progress-tasks');
+        const completedTasks = document.getElementById('completed-tasks');
+        const overdueTasks = document.getElementById('overdue-tasks');
+
+        inProgressTasks.innerHTML = '';
+        completedTasks.innerHTML = '';
+        overdueTasks.innerHTML = '';
+
+        filteredTasks.forEach(task => {
+            const taskElement = createTaskElement(task);
+            if (task.status === 'completed') {
+                completedTasks.appendChild(taskElement);
+            } else if (task.is_overdue) {
+                overdueTasks.appendChild(taskElement);
+            } else {
+                inProgressTasks.appendChild(taskElement);
+            }
+        });
+
+        updateArrowVisibility();
+    }
+
+    // Add category filter event listener
+    categoryFilter.addEventListener('change', filterTasks);
+
+    // Initialize categories and tasks
+    loadCategories();
+    fetchTasks();
 });
 
 document.querySelector('.scroll-arrow').addEventListener('click', function() {

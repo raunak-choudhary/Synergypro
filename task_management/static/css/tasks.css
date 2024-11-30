@@ -277,3 +277,63 @@
     font-style: italic;
     color: rgba(255, 255, 255, 0.7);
 }
+
+.task-category {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: rgba(108, 92, 231, 0.1);
+    color: #6c5ce7;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    margin: 8px 0;
+    font-weight: 500;
+    border: 1px solid rgba(108, 92, 231, 0.2);
+}
+
+.task-tile {
+    /* Update existing task-tile styles */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+}
+
+.task-header {
+    margin-bottom: 4px;
+}
+
+.category-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    margin: 8px 0;
+    font-weight: 500;
+    width: fit-content; /* Makes the tag adjust to content width */
+    min-width: min-content; /* Ensures the tag doesn't shrink smaller than its content */
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+.tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-left: 10px;
+}
+
+.category-dropdown {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.category-dropdown option {
+    background: #2b1a54;
+    color: white;
+}

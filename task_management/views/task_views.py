@@ -10,7 +10,7 @@ def tasks_view(request):
     return render(request, 'task_management/dashboard/tasks.html', {'tasks': tasks})
 
 def tasks_api(request):
-    tasks = Task.objects.all().order_by('-created_at')
+    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
     tasks_data = [
         {
             'id': task.id,
@@ -20,18 +20,14 @@ def tasks_api(request):
             'end_date': task.end_date.isoformat() if task.end_date else None,
             'status': task.status,
             'is_overdue': task.is_overdue(),
+            'category': {
+                'id': task.category.id,
+                'name': task.category.name
+            } if task.category else None
         }
         for task in tasks
     ]
     return JsonResponse(tasks_data, safe=False)
-
-def task_detail_view(request, task_id):
-    task = get_object_or_404(Task, id=task_id)
-    task_files = task.files.all()
-    return render(request, 'task_management/dashboard/task_detail.html', {
-        'task': task,
-        'task_files': task_files
-    })
 
 def get_task_files(request, task_id):
     task = get_object_or_404(Task, id=task_id)
@@ -108,11 +104,15 @@ def task_detail_view(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
     task_files = task.files.all()
     categories = TaskCategory.objects.filter(user=request.user)
-    return render(request, 'task_management/dashboard/task_detail.html', {
+
+    # Add category information to the context
+    context = {
         'task': task,
         'task_files': task_files,
-        'categories': categories
-    })
+        'categories': categories,
+        'selected_category': task.category.id if task.category else ''
+    }
+    return render(request, 'task_management/dashboard/task_detail.html', context)
 
 @csrf_exempt
 def delete_task(request, task_id):
