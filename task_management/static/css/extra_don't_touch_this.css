@@ -1,0 +1,15 @@
+.article-highlight {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 1.25rem 0;
+    padding: 1rem;
+    background: rgba(155, 47, 147, 0.05);
+    border-left: 3px solid var(--bright-purple);
+    border-radius: 0 8px 8px 0;
+    flex-grow: 1;
+}
+
+.article-card:hover .article-highlight {
+    background: rgba(155, 47, 147, 0.1);
+}
