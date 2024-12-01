@@ -12,6 +12,8 @@ import random
 from datetime import datetime, timedelta
 from ..utils.message_service import MessageService
 from .auth_views import get_dashboard_url
+from ..views.task_views import get_task_stats
+import math
 
 @login_required
 def profile_view(request):
@@ -112,16 +114,16 @@ def individual_freelancer_dashboard(request):
 
 @login_required
 def individual_student_dashboard(request):
-    if request.user.user_type != 'individual' or request.user.profile_type != 'student':
-        # Redirect to appropriate dashboard if wrong user type
-        return redirect(get_dashboard_url(request.user))
-    
+    task_stats = get_task_stats(request)
+
     context = {
         'user': request.user,
-        'total_tasks': 24,
-        'in_progress': 8,
-        'completed': 16
+        'total_tasks': task_stats['total_tasks'],
+        'in_progress': task_stats['in_progress'],
+        'completed': task_stats['completed'] if task_stats['completed'] > 0 else 0,
+        'completion_percentage': math.floor((task_stats['in_progress']) / task_stats['total_tasks'] * 100) if task_stats['total_tasks'] > 0 else 0
     }
+
     return render(request, 'task_management/dashboard/individual_student_dashboard.html', context)
 
 @login_required
