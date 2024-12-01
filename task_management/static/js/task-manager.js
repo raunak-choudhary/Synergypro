@@ -1,5 +1,80 @@
 document.addEventListener('DOMContentLoaded', function() {
 
+    // Add at the beginning of your DOMContentLoaded event listener
+    const createTaskBtn = document.getElementById('createTaskBtn');
+    const modal = document.getElementById('taskModal');
+    const closeBtn = modal.querySelector('.close');
+    const taskForm = document.getElementById('taskForm');
+
+    createTaskBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        // Set default dates
+        const now = new Date();
+        document.getElementById('taskStartDate').value = now.toISOString().split('T')[0];
+        document.getElementById('taskStartTime').value = now.toTimeString().slice(0,5);
+
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('taskEndDate').value = tomorrow.toISOString().split('T')[0];
+        document.getElementById('taskEndTime').value = now.toTimeString().slice(0,5);
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    taskForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Get form values
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const startDate = document.getElementById('taskStartDate').value;
+        const startTime = document.getElementById('taskStartTime').value;
+        const endDate = document.getElementById('taskEndDate').value;
+        const endTime = document.getElementById('taskEndTime').value;
+
+        // Create start and end datetime strings
+        const startDateTime = new Date(`${startDate}T${startTime}`).toISOString();
+        const endDateTime = new Date(`${endDate}T${endTime}`).toISOString();
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('start_date', startDateTime);
+        formData.append('end_date', endDateTime);
+        formData.append('status', 'yet_to_start');
+
+        try {
+            const response = await fetch('/api/tasks/create/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {  // Check HTTP status first
+                modal.style.display = 'none';
+                taskForm.reset();
+                fetchTasks(); // Refresh the task list
+            } else {
+                alert('Failed to create task: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while creating the task');
+        }
+    });
+
     function fetchTasks() {
         fetch('/api/tasks/')
         .then(response => response.json())
@@ -283,17 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => console.error('Error loading categories:', error));
-    }
-
-    // Modify your fetchTasks function
-    function fetchTasks() {
-        fetch('/api/tasks/')
-            .then(response => response.json())
-            .then(data => {
-                allTasks = data; // Store all tasks
-                filterTasks();
-            })
-            .catch(error => console.error('Error fetching tasks:', error));
     }
 
     function filterTasks() {
