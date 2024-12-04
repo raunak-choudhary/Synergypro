@@ -1,42 +1,210 @@
 document.addEventListener('DOMContentLoaded', function() {
 
-    function fetchTasks() {
-        fetch('/api/tasks/')
-        .then(response => response.json())
-        .then(data => {
-            const inProgressTasks = document.getElementById('in-progress-tasks');
-            const completedTasks = document.getElementById('completed-tasks');
-            const overdueTasks = document.getElementById('overdue-tasks');
+    const sections = [
+        {
+            wrapper: document.getElementById('in-progress-tasks'),
+            leftArrow: document.querySelector('.left-arrow.in-progress-arrow'),
+            rightArrow: document.querySelector('.right-arrow.in-progress-arrow')
+        },
+        {
+            wrapper: document.getElementById('completed-tasks'),
+            leftArrow: document.querySelector('.left-arrow.completed-arrow'),
+            rightArrow: document.querySelector('.right-arrow.completed-arrow')
+        },
+        {
+            wrapper: document.getElementById('overdue-tasks'),
+            leftArrow: document.querySelector('.left-arrow.overdue-arrow'),
+            rightArrow: document.querySelector('.right-arrow.overdue-arrow')
+        }
+    ];
 
-            inProgressTasks.innerHTML = '';
-            completedTasks.innerHTML = '';
-            overdueTasks.innerHTML = '';
+    // Function to update arrow visibility
+    function updateArrowVisibility() {
+        sections.forEach(section => {
+            if (!section.wrapper) return;
 
-            data.forEach(task => {
-                const taskElement = createTaskElement(task);
-                if (task.status === 'completed') {
-                    completedTasks.appendChild(taskElement);
-                } else if (task.is_overdue) {
-                    overdueTasks.appendChild(taskElement);
-                } else {
-                    inProgressTasks.appendChild(taskElement);
+            const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
+
+            if (isScrollable) {
+                section.leftArrow.style.display = 'flex';
+                section.rightArrow.style.display = 'flex';
+
+                const isAtStart = section.wrapper.scrollLeft <= 0;
+                const isAtEnd = section.wrapper.scrollLeft >= section.wrapper.scrollWidth - section.wrapper.clientWidth;
+
+                if (isAtStart) {
+                    section.leftArrow.style.display = 'none';
                 }
+                if (isAtEnd) {
+                    section.rightArrow.style.display = 'none';
+                }
+            } else {
+                section.leftArrow.style.display = 'none';
+                section.rightArrow.style.display = 'none';
+            }
+        });
+    }
+
+    sections.forEach(section => {
+        if (!section.wrapper) return;
+
+        section.leftArrow.addEventListener('click', () => {
+            section.wrapper.scrollBy({ left: -300, behavior: 'smooth' });
+        });
+
+        section.rightArrow.addEventListener('click', () => {
+            section.wrapper.scrollBy({ left: 300, behavior: 'smooth' });
+        });
+
+        section.wrapper.addEventListener('scroll', updateArrowVisibility);
+    });
+
+    window.addEventListener('resize', updateArrowVisibility);
+
+    // Category filter functionality
+    const categoryFilter = document.getElementById('categoryFilter');
+    let allTasks = []; // Store all tasks
+
+    function loadCategories() {
+        fetch('/api/tasks/categories/')
+            .then(response => response.json())
+            .then(data => {
+                const categories = data.categories;
+                categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+                if (categories.length === 0) {
+                    const option = new Option('No categories', '');
+                    option.disabled = true;
+                    categoryFilter.add(option);
+                } else {
+                    categories.forEach(category => {
+                        categoryFilter.add(new Option(category.name, category.id));
+                    });
+                }
+            })
+            .catch(error => console.error('Error loading categories:', error));
+    }
+
+    function filterTasks() {
+        const selectedCategoryId = categoryFilter.value;
+        const filteredTasks = selectedCategoryId ?
+            allTasks.filter(task => task.category && task.category.id.toString() === selectedCategoryId) :
+            allTasks;
+
+        const inProgressTasks = document.getElementById('in-progress-tasks');
+        const completedTasks = document.getElementById('completed-tasks');
+        const overdueTasks = document.getElementById('overdue-tasks');
+
+        // Clear existing tasks
+        inProgressTasks.innerHTML = '';
+        completedTasks.innerHTML = '';
+        overdueTasks.innerHTML = '';
+
+        // Add filtered tasks
+        filteredTasks.forEach(task => {
+            const taskElement = createTaskElement(task);
+            if (task.status === 'completed') {
+                completedTasks.appendChild(taskElement);
+            } else if (task.is_overdue) {
+                overdueTasks.appendChild(taskElement);
+            } else {
+                inProgressTasks.appendChild(taskElement);
+            }
+        });
+    }
+
+    // Add category filter event listener
+    categoryFilter.addEventListener('change', () => {
+        filterTasks();
+    });
+
+    // Initialize categories and tasks
+    loadCategories();
+    fetchTasks();
+
+    // Add at the beginning of your DOMContentLoaded event listener
+    const createTaskBtn = document.getElementById('createTaskBtn');
+    const modal = document.getElementById('taskModal');
+    const closeBtn = modal.querySelector('.close');
+    const taskForm = document.getElementById('taskForm');
+
+    createTaskBtn.addEventListener('click', () => {
+        modal.style.display = 'flex';
+        // Set default dates
+        const now = new Date();
+        document.getElementById('taskStartDate').value = now.toISOString().split('T')[0];
+        document.getElementById('taskStartTime').value = now.toTimeString().slice(0,5);
+
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('taskEndDate').value = tomorrow.toISOString().split('T')[0];
+        document.getElementById('taskEndTime').value = now.toTimeString().slice(0,5);
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    taskForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Get form values
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDescription').value;
+        const startDate = document.getElementById('taskStartDate').value;
+        const startTime = document.getElementById('taskStartTime').value;
+        const endDate = document.getElementById('taskEndDate').value;
+        const endTime = document.getElementById('taskEndTime').value;
+
+        // Create start and end datetime strings
+        const startDateTime = new Date(`${startDate}T${startTime}`).toISOString();
+        const endDateTime = new Date(`${endDate}T${endTime}`).toISOString();
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('start_date', startDateTime);
+        formData.append('end_date', endDateTime);
+        formData.append('status', 'yet_to_start');
+
+        try {
+            const response = await fetch('/api/tasks/create/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
             });
 
-             setTimeout(() => {
-                sections.forEach(section => {
-                    const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
-                    if (isScrollable) {
-                        section.rightArrow.style.display = 'flex';
-                        // Only show left arrow if not at the start
-                        section.leftArrow.style.display = section.wrapper.scrollLeft > 0 ? 'flex' : 'none';
-                    }
-                });
-            }, 100);
+            const data = await response.json();
 
-            updateArrowVisibility();
-        })
-        .catch(error => console.error('Error fetching tasks:', error));
+            if (response.ok) {  // Check HTTP status first
+                modal.style.display = 'none';
+                taskForm.reset();
+                fetchTasks(); // Refresh the task list
+            } else {
+                alert('Failed to create task: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while creating the task');
+        }
+    });
+
+    function fetchTasks() {
+        fetch('/api/tasks/')
+            .then(response => response.json())
+            .then(data => {
+                allTasks = data; // Store all tasks globally
+                filterTasks(); // Use filterTasks to display them
+            })
+            .catch(error => console.error('Error fetching tasks:', error));
     }
 
     function createTaskElement(task) {
@@ -185,71 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = `/task/${taskId}/`;
     }
 
-    const sections = [
-        {
-            wrapper: document.getElementById('in-progress-tasks'),
-            leftArrow: document.querySelector('.in-progress-arrow.left-arrow'),
-            rightArrow: document.querySelector('.in-progress-arrow.right-arrow')
-        },
-        {
-            wrapper: document.getElementById('completed-tasks'),
-            leftArrow: document.querySelector('.completed-arrow.left-arrow'),
-            rightArrow: document.querySelector('.completed-arrow.right-arrow')
-        },
-        {
-            wrapper: document.getElementById('overdue-tasks'),
-            leftArrow: document.querySelector('.overdue-arrow.left-arrow'),
-            rightArrow: document.querySelector('.overdue-arrow.right-arrow')
-        }
-    ];
-
-    sections.forEach(section => {
-        section.leftArrow.addEventListener('click', () => {
-            section.wrapper.scrollBy({
-                left: -300,
-                behavior: 'smooth'
-            });
-        });
-
-        section.rightArrow.addEventListener('click', () => {
-            section.wrapper.scrollBy({
-                left: 300,
-                behavior: 'smooth'
-            });
-        });
-
-        // Update arrow visibility
-        function updateArrowVisibility() {
-             const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
-
-            // Show both arrows by default if content is scrollable
-            if (isScrollable) {
-                section.leftArrow.style.display = 'flex';
-                section.rightArrow.style.display = 'flex';
-            } else {
-                section.leftArrow.style.display = 'none';
-                section.rightArrow.style.display = 'none';
-            }
-
-            // Optionally hide left arrow when at start and right arrow when at end
-            const isAtStart = section.wrapper.scrollLeft <= 0;
-            const isAtEnd = section.wrapper.scrollLeft >= section.wrapper.scrollWidth - section.wrapper.clientWidth;
-
-            if (isScrollable) {
-                if (isAtStart) {
-                    section.leftArrow.style.display = 'none';
-                }
-                if (isAtEnd) {
-                    section.rightArrow.style.display = 'none';
-                }
-            }
-        }
-
-        section.wrapper.addEventListener('scroll', updateArrowVisibility);
-        window.addEventListener('resize', updateArrowVisibility);
-        updateArrowVisibility();
-    });
-
     function checkForStatusUpdate() {
         const statusUpdated = sessionStorage.getItem('statusUpdated');
         if (statusUpdated) {
@@ -260,76 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fetchTasks();
     checkForStatusUpdate();
-
-    // Add at the beginning of your DOMContentLoaded event
-    const categoryFilter = document.getElementById('categoryFilter');
-    let allTasks = []; // Store all tasks
-
-    function loadCategories() {
-        fetch('/api/tasks/categories/')
-            .then(response => response.json())
-            .then(data => {
-                const categories = data.categories;
-                categoryFilter.innerHTML = '<option value="">All Categories</option>';
-
-                if (categories.length === 0) {
-                    const option = new Option('No categories', '');
-                    option.disabled = true;
-                    categoryFilter.add(option);
-                } else {
-                    categories.forEach(category => {
-                        categoryFilter.add(new Option(category.name, category.id));
-                    });
-                }
-            })
-            .catch(error => console.error('Error loading categories:', error));
-    }
-
-    // Modify your fetchTasks function
-    function fetchTasks() {
-        fetch('/api/tasks/')
-            .then(response => response.json())
-            .then(data => {
-                allTasks = data; // Store all tasks
-                filterTasks();
-            })
-            .catch(error => console.error('Error fetching tasks:', error));
-    }
-
-    function filterTasks() {
-        const selectedCategoryId = categoryFilter.value;
-        const filteredTasks = selectedCategoryId ?
-            allTasks.filter(task => task.category && task.category.id.toString() === selectedCategoryId) :
-            allTasks;
-
-        const inProgressTasks = document.getElementById('in-progress-tasks');
-        const completedTasks = document.getElementById('completed-tasks');
-        const overdueTasks = document.getElementById('overdue-tasks');
-
-        inProgressTasks.innerHTML = '';
-        completedTasks.innerHTML = '';
-        overdueTasks.innerHTML = '';
-
-        filteredTasks.forEach(task => {
-            const taskElement = createTaskElement(task);
-            if (task.status === 'completed') {
-                completedTasks.appendChild(taskElement);
-            } else if (task.is_overdue) {
-                overdueTasks.appendChild(taskElement);
-            } else {
-                inProgressTasks.appendChild(taskElement);
-            }
-        });
-
-        updateArrowVisibility();
-    }
-
-    // Add category filter event listener
-    categoryFilter.addEventListener('change', filterTasks);
-
-    // Initialize categories and tasks
-    loadCategories();
-    fetchTasks();
 
     function initializeLogout() {
         const logoutLink = document.querySelector('a[href*="logout"]');

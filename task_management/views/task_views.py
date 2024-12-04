@@ -126,6 +126,21 @@ def delete_task(request, task_id):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
+def get_task_stats(request):
+    user_tasks = Task.objects.filter(user=request.user)
+
+    stats = {
+        'total_tasks': user_tasks.count(),
+        'in_progress': user_tasks.filter(status='yet_to_start').count() + user_tasks.filter(status='in_progress').count(),
+        'completed': user_tasks.filter(status='completed').count(),
+        'overdue': len([task for task in user_tasks if task.is_overdue()])
+    }
+
+    print(stats)
+
+    return stats
+
+
 @csrf_exempt
 def create_category(request):
     if request.method == 'POST':
