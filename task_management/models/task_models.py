@@ -34,6 +34,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
     task_progress = models.IntegerField(default=0)
     task_owner = models.CharField(max_length=150)
+    file_count = models.IntegerField(default=0)
     
     def is_overdue(self):
         today = timezone.now().date()
@@ -56,3 +57,38 @@ class TaskComment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.user.username} on {self.task.title}'
+
+def get_file_upload_path(instance, filename):
+    """
+    Generate the upload path for task files.
+    Path format: task_files/<user_id>/<task_id>/<filename>
+    """
+    return f'task_files/{instance.user.id}/{instance.task.id}/{filename}'
+    
+class TaskFile(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='files')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.FileField(upload_to=get_file_upload_path)
+    original_filename = models.CharField(max_length=255)
+    file_size = models.IntegerField()  # Size in bytes
+    file_type = models.CharField(max_length=10)  # Store extension
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.original_filename} - {self.task.title}"
+
+    def save(self, *args, **kwargs):
+        # Update task file count on save
+        if not self.pk:  # Only on creation
+            self.task.file_count += 1
+            self.task.save()
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Update task file count on delete
+        self.task.file_count -= 1
+        self.task.save()
+        super().delete(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-uploaded_at']

@@ -3,8 +3,12 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from ..models.task_models import Task, TaskComment
+from ..models.task_models import Task, TaskComment, TaskFile
 import json
+from django.core.exceptions import ValidationError
+from django.conf import settings
+import os
+import mimetypes
 
 @login_required
 def tasks_view(request):
@@ -121,3 +125,86 @@ def delete_task(request, task_id):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+def validate_file(file):
+    # Check file size (10MB limit)
+    if file.size > 10 * 1024 * 1024:  
+        raise ValidationError('File size must be no more than 10MB')
+    
+    file_extension = os.path.splitext(file.name)[1].lower()
+    
+    allowed_extensions = [
+        '.pdf', '.docx', '.xlsx', '.txt', 
+        '.png', '.jpg', '.jpeg', '.pptx'
+    ]
+    
+    if file_extension not in allowed_extensions:
+        raise ValidationError(
+            f'Invalid file type. Allowed types are: {", ".join(allowed_extensions)}'
+        )
+
+@login_required
+def upload_task_file(request, task_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    
+    if 'file' not in request.FILES:
+        return JsonResponse({'error': 'No file provided'}, status=400)
+    
+    file = request.FILES['file']
+    
+    try:
+        validate_file(file)
+        
+        task_file = TaskFile.objects.create(
+            task=task,
+            user=request.user,
+            file=file,
+            original_filename=file.name,
+            file_size=file.size,
+            file_type=os.path.splitext(file.name)[1].lower()
+        )
+        
+        return JsonResponse({
+            'id': task_file.id,
+            'filename': task_file.original_filename,
+            'size': task_file.file_size,
+            'uploaded_at': task_file.uploaded_at.isoformat(),
+            'file_type': task_file.file_type
+        })
+        
+    except ValidationError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': 'Error uploading file'}, status=500)
+    
+@login_required
+def task_files_api(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    
+    if request.method == 'GET':
+        files = TaskFile.objects.filter(task=task)
+        files_data = [{
+            'id': f.id,
+            'filename': f.original_filename,
+            'size': f.file_size,
+            'uploaded_at': f.uploaded_at.isoformat(),
+            'file_type': f.file_type
+        } for f in files]
+        return JsonResponse(files_data, safe=False)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+def task_file_detail_api(request, task_id, file_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    task_file = get_object_or_404(TaskFile, id=file_id, task=task)
+    
+    if request.method == 'DELETE':
+        task_file.delete()
+        return JsonResponse({'status': 'success'})
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+    

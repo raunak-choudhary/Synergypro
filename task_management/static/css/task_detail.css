@@ -392,9 +392,60 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .confirm-delete:hover {
-    background: #dc2626; /* Darker red */
+    background: #dc2626;
     transform: translateY(-1px);
     transition: all 0.2s ease;
+}
+
+/* File Upload */
+.file-upload-box {
+    text-align: center;
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: #151521;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-box:hover {
+    border-color: #3699FF;
+    background: rgba(54, 153, 255, 0.05);
+}
+
+.file-upload-box.drag-over {
+    border-color: #3699FF;
+    background: rgba(54, 153, 255, 0.1);
+}
+
+.upload-placeholder {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.file-limits {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.5rem;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #fff;
+}
+
+.selected-file {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(54, 153, 255, 0.1);
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.9rem;
+    text-align: center;
+    display: none;
 }
 
 /* Disabled States */

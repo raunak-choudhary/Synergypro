@@ -72,6 +72,7 @@ class TaskDetailManager {
         if (this.initialized) {
             console.log('Initialization successful, setting up components');
             this.attachEventListeners();
+            this.initializeFileUpload();
             this.loadTaskDetails();
             this.loadComments();
             console.log('All components initialized');
@@ -117,6 +118,11 @@ class TaskDetailManager {
             this.newCommentInput = document.getElementById('newComment');
             this.addCommentBtn = document.getElementById('addCommentBtn');
 
+            // File upload elements
+            this.fileUploadBox = document.getElementById('fileUploadBox');
+            this.fileInput = document.getElementById('fileInput');
+            this.selectedFileDiv = document.querySelector('.selected-file');
+
             // Verify critical elements
             if (!this.editBtn || !this.saveBtn || !this.deleteButton) {
                 console.error('Critical buttons not found');
@@ -139,28 +145,23 @@ class TaskDetailManager {
 
         console.log('Attaching event listeners');
         
-        // Form control listeners
         this.editBtn.addEventListener('click', () => this.enableEditing());
         this.saveBtn.addEventListener('click', () => this.saveChanges());
         
-        // Progress bar listener
         if (this.progressBar) {
             this.progressBar.addEventListener('input', () => this.updateProgressValue());
         }
         
-        // Comments listener
         if (this.addCommentBtn) {
             this.addCommentBtn.addEventListener('click', () => this.addComment());
         }
 
-        // Priority buttons
         document.querySelectorAll('.priority-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (!btn.disabled) this.selectButton(btn, '.priority-btn');
             });
         });
         
-        // Status buttons
         document.querySelectorAll('.status-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (!btn.disabled) this.selectButton(btn, '.status-btn');
@@ -175,7 +176,6 @@ class TaskDetailManager {
             });
         }
     
-        // Close buttons (X and Cancel)
         this.closeButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -184,7 +184,6 @@ class TaskDetailManager {
             });
         });
     
-        // Confirm delete
         if (this.confirmButton) {
             this.confirmButton.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -193,13 +192,54 @@ class TaskDetailManager {
             });
         }
     
-        // Prevent modal from closing when clicking modal content
         if (this.modalContent) {
             this.modalContent.addEventListener('click', (e) => {
                 e.stopPropagation();
             });
         }
     }
+
+    initializeFileUpload() {
+        if (!this.fileUploadBox || !this.fileInput) {
+            console.error('File upload elements not found');
+            return;
+        }
+    
+        // Click to upload
+        this.fileUploadBox.addEventListener('click', () => {
+            if (!this.isEditing) return;
+            this.fileInput.click();
+        });
+    
+        // File selection handler
+        this.fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                this.handleSelectedFile(file);
+            }
+        });
+    }
+
+    handleSelectedFile(file) {
+        // Validate file size
+        if (file.size > 10 * 1024 * 1024) { // 10MB in bytes
+            this.showNotification('File size must be no more than 10MB', 'error');
+            this.fileInput.value = '';
+            return;
+        }
+    
+        const allowedTypes = ['.pdf', '.docx', '.xlsx', '.txt', '.png', '.jpg', '.jpeg', '.pptx'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+            this.showNotification('Invalid file type. Allowed types are: PDF, DOCX, Excel, TXT, PNG, JPG, JPEG, PPTX', 'error');
+            this.fileInput.value = '';
+            return;
+        }
+
+        this.selectedFileDiv.style.display = 'block';
+        this.selectedFileDiv.textContent = file.name;
+    }    
 
     async loadTaskDetails() {
         const taskId = this.getTaskId();
@@ -357,6 +397,7 @@ class TaskDetailManager {
         const taskData = this.getFormData();
     
         try {
+            // First save the task details
             const response = await fetch(`/api/tasks/${taskId}/`, {
                 method: 'PUT',
                 headers: {
@@ -370,14 +411,32 @@ class TaskDetailManager {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
     
-            const result = await response.json();
-            if (result.status === 'success') {
-                this.disableEditing();
-                await this.loadTaskDetails();
-                this.showNotification(`Task "${taskData.title}" has been updated`, 'success');
-            } else {
-                throw new Error(result.error || 'Failed to update task');
+            // If there's a file selected, upload it
+            if (this.fileInput.files.length > 0) {
+                const formData = new FormData();
+                formData.append('file', this.fileInput.files[0]);
+    
+                const fileResponse = await fetch(`/api/tasks/${taskId}/files/upload/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCsrfToken()
+                    },
+                    body: formData
+                });
+    
+                if (!fileResponse.ok) {
+                    throw new Error('File upload failed');
+                }
             }
+    
+            // Clear file input and selected file display
+            this.fileInput.value = '';
+            this.selectedFileDiv.style.display = 'none';
+            this.selectedFileDiv.textContent = '';
+    
+            this.disableEditing();
+            await this.loadTaskDetails();
+            this.showNotification(`Task "${taskData.title}" has been updated`, 'success');
         } catch (error) {
             console.error('Error saving task:', error);
             this.showNotification(error.message || 'Error saving task', 'error');
@@ -471,6 +530,9 @@ class TaskDetailManager {
         this.formInputs.forEach(input => input.disabled = true);
         this.editBtn.disabled = false;
         this.saveBtn.disabled = true;
+        this.fileInput.value = '';
+        this.selectedFileDiv.style.display = 'none';
+        this.selectedFileDiv.textContent = '';
     }
 
     formatDate(dateString) {
