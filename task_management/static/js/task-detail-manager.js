@@ -73,6 +73,7 @@ class TaskDetailManager {
             console.log('Initialization successful, setting up components');
             this.attachEventListeners();
             this.initializeFileUpload();
+            this.loadCategories();
             this.loadTaskDetails();
             this.loadComments();
             console.log('All components initialized');
@@ -122,6 +123,12 @@ class TaskDetailManager {
             this.fileUploadBox = document.getElementById('fileUploadBox');
             this.fileInput = document.getElementById('fileInput');
             this.selectedFileDiv = document.querySelector('.selected-file');
+
+            //Category elements
+            this.categorySelect = document.getElementById('taskCategory');
+            this.categoryModal = document.getElementById('categoryModal');
+            this.categoryNameInput = document.getElementById('categoryName');
+            this.createCategoryBtn = document.querySelector('.confirm-create-category');
 
             // Verify critical elements
             if (!this.editBtn || !this.saveBtn || !this.deleteButton) {
@@ -195,6 +202,29 @@ class TaskDetailManager {
         if (this.modalContent) {
             this.modalContent.addEventListener('click', (e) => {
                 e.stopPropagation();
+            });
+        }
+
+        if (this.categorySelect) {
+            this.categorySelect.addEventListener('change', (e) => {
+                if (e.target.value === 'create') {
+                    this.showCategoryModal();
+                    // Reset select to previous value
+                    e.target.value = e.target.dataset.lastValue || '';
+                }
+            });
+        }
+        
+        if (this.createCategoryBtn) {
+            this.createCategoryBtn.addEventListener('click', () => this.createCategory());
+        }
+
+        const categoryCloseButtons = this.categoryModal?.querySelectorAll('[data-close-modal]');
+        if (categoryCloseButtons) {
+            categoryCloseButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    this.hideCategoryModal();
+                });
             });
         }
     }
@@ -385,6 +415,7 @@ class TaskDetailManager {
         this.formInputs.forEach(input => input.disabled = false);
         this.editBtn.disabled = true;
         this.saveBtn.disabled = false;
+        this.categorySelect.disabled = false;
     }
 
     async saveChanges() {
@@ -533,6 +564,7 @@ class TaskDetailManager {
         this.fileInput.value = '';
         this.selectedFileDiv.style.display = 'none';
         this.selectedFileDiv.textContent = '';
+        this.categorySelect.disabled = true;
     }
 
     formatDate(dateString) {
@@ -544,6 +576,90 @@ class TaskDetailManager {
             minute: '2-digit' 
         };
         return new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    async loadCategories() {
+        try {
+            const response = await fetch('/api/categories/');
+            if (!response.ok) throw new Error('Failed to load categories');
+            
+            const categories = await response.json();
+            this.populateCategoryDropdown(categories);
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            this.showNotification('Error loading categories', 'error');
+        }
+    }
+    
+    populateCategoryDropdown(categories) {
+        if (!this.categorySelect) return;
+        
+        // Save current selection if any
+        const currentValue = this.categorySelect.value;
+        
+        // Clear existing options except first and last
+        while (this.categorySelect.options.length > 2) {
+            this.categorySelect.remove(1);
+        }
+        
+        // Add new options
+        categories.forEach(category => {
+            const option = new Option(category.name, category.id);
+            this.categorySelect.add(option, this.categorySelect.options[1]);
+        });
+        
+        // Restore selection if it exists
+        if (currentValue && currentValue !== 'create') {
+            this.categorySelect.value = currentValue;
+        }
+    }
+    
+    showCategoryModal() {
+        if (this.categoryModal) {
+            this.categoryModal.classList.add('show');
+            this.categoryNameInput.value = '';
+            this.categoryNameInput.focus();
+        }
+    }
+    
+    hideCategoryModal() {
+        if (this.categoryModal) {
+            this.categoryModal.classList.remove('show');
+            this.categoryNameInput.value = '';
+        }
+    }
+    
+    async createCategory() {
+        const categoryName = this.categoryNameInput.value.trim();
+        if (!categoryName) {
+            this.showNotification('Please enter a category name', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/categories/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify({ name: categoryName })
+            });
+            
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to create category');
+            }
+            
+            const newCategory = await response.json();
+            await this.loadCategories();
+            this.categorySelect.value = newCategory.id;
+            this.hideCategoryModal();
+            this.showNotification('Category created successfully', 'success');
+        } catch (error) {
+            console.error('Error creating category:', error);
+            this.showNotification(error.message || 'Error creating category', 'error');
+        }
     }
 
     handleError(error, message = 'An error occurred') {

@@ -425,18 +425,6 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 0.9rem;
 }
 
-.file-limits {
-    display: block;
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 0.5rem;
-}
-
-.file-name {
-    font-weight: 500;
-    color: #fff;
-}
-
 .selected-file {
     margin-top: 0.5rem;
     padding: 0.5rem;
@@ -446,6 +434,128 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 0.9rem;
     text-align: center;
     display: none;
+}
+
+/* Category Styles */
+.title-category-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    position: relative;
+    z-index: 30;  
+}
+
+.title-section {
+    flex: 1;
+}
+
+.category-section {
+    position: relative;
+    flex: 1;
+    z-index: 30;
+}
+
+.category-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #2B2B40;
+    border-radius: 8px;
+    background: #151521;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+    position: relative;
+}
+
+.category-select option {
+    background: #1E1E2D;
+    color: #fff;
+    padding: 0.75rem;
+    position: relative;
+    z-index: 20;
+}
+
+.category-select option:last-child {
+    color: #3699FF;
+    font-weight: 500;
+}
+
+.category-select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+select.category-select::-ms-expand {
+    display: none;
+}
+
+.form-group:has(textarea) {
+    position: relative;
+    z-index: 20;
+}
+
+select.category-select {
+    appearance: menulist-button;
+    position: relative;
+}
+
+/* Ensure dropdown appears below */
+.category-select optgroup,
+.category-select option {
+    margin-top: 0.5rem;
+    background: #1E1E2D;
+}
+
+/* Category Modal Styles */
+#categoryModal .modal-content {
+    max-width: 400px;
+}
+
+#categoryModal input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #2B2B40;
+    border-radius: 8px;
+    background: #151521;
+    color: #fff;
+    font-size: 1rem;
+}
+
+#categoryModal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+#categoryModal .cancel-modal {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#categoryModal .cancel-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+#categoryModal .confirm-create-category {
+    background: #3699FF;
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#categoryModal .confirm-create-category:hover {
+    background: #1f7fea;
+    transform: translateY(-1px);
 }
 
 /* Disabled States */

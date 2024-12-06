@@ -3,12 +3,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from ..models.task_models import Task, TaskComment, TaskFile
+from ..models.task_models import Task, TaskComment, TaskFile, TaskCategory
 import json
 from django.core.exceptions import ValidationError
-from django.conf import settings
+from django.db import IntegrityError
 import os
-import mimetypes
 
 @login_required
 def tasks_view(request):
@@ -207,4 +206,41 @@ def task_file_detail_api(request, task_id, file_id):
         return JsonResponse({'status': 'success'})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@login_required
+def categories_api(request):
+    """Get all categories for the current user"""
+    categories = TaskCategory.objects.filter(user=request.user).order_by('name')
+    categories_data = [{
+        'id': category.id,
+        'name': category.name
+    } for category in categories]
+    return JsonResponse(categories_data, safe=False)
+
+@login_required
+def create_category(request):
+    """Create a new category"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        category_name = data.get('name', '').strip()
+        
+        if not category_name:
+            return JsonResponse({'error': 'Category name is required'}, status=400)
+            
+        category = TaskCategory.objects.create(
+            user=request.user,
+            name=category_name
+        )
+        
+        return JsonResponse({
+            'id': category.id,
+            'name': category.name
+        })
+    except IntegrityError:
+        return JsonResponse({'error': 'Category already exists'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
     

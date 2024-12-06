@@ -1,0 +1,71 @@
+/* Category Styles */
+.title-category-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.title-section {
+    flex: 1;
+}
+
+.category-section {
+    flex: 1;
+}
+
+.category-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #2B2B40;
+    border-radius: 8px;
+    background: #151521;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.category-select option {
+    padding: 0.75rem;
+    background: #1E1E2D;
+}
+
+.category-select option:last-child {
+    color: #3699FF;
+    font-weight: 500;
+}
+
+.category-select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Category Modal Styles */
+#categoryModal .modal-content {
+    max-width: 400px;
+}
+
+#categoryModal input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #2B2B40;
+    border-radius: 8px;
+    background: #151521;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.confirm-create-category {
+    background: #3699FF;
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-create-category:hover {
+    background: #1f7fea;
+    transform: translateY(-1px);
+}

@@ -22,9 +22,8 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     
-    # Updated date and time fields
     start_date = models.DateField(default=timezone.now)
-    start_time = models.TimeField(default=time(0, 0))  # default to 00:00
+    start_time = models.TimeField(default=time(0, 0))
     end_date = models.DateField(null=True, blank=True)
     end_time = models.TimeField(null=True, blank=True)
     
@@ -70,8 +69,8 @@ class TaskFile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to=get_file_upload_path)
     original_filename = models.CharField(max_length=255)
-    file_size = models.IntegerField()  # Size in bytes
-    file_type = models.CharField(max_length=10)  # Store extension
+    file_size = models.IntegerField() 
+    file_type = models.CharField(max_length=10)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -79,7 +78,7 @@ class TaskFile(models.Model):
 
     def save(self, *args, **kwargs):
         # Update task file count on save
-        if not self.pk:  # Only on creation
+        if not self.pk:
             self.task.file_count += 1
             self.task.save()
         super().save(*args, **kwargs)
@@ -92,3 +91,17 @@ class TaskFile(models.Model):
 
     class Meta:
         ordering = ['-uploaded_at']
+
+class TaskCategory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Prevent duplicate category names per user
+    class Meta:
+        ordering = ['name']
+        unique_together = ['user', 'name']  
+        
+    def __str__(self):
+        return self.name
+

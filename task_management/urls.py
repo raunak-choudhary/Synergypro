@@ -49,6 +49,10 @@ urlpatterns = [
         path('api/tasks/<int:task_id>/files/<int:file_id>/', task_views.task_file_detail_api, name='task_file_detail_api'),
         path('api/tasks/<int:task_id>/files/upload/', task_views.upload_task_file, name='upload_task_file'),
 
+        #Task Categories URLs
+        path('api/categories/', task_views.categories_api, name='categories_api'),
+        path('api/categories/create/', task_views.create_category, name='create_category'),
+
         #Help Center Page
         path('help-center/', help_views.help_center_view, name='help_center'),
         path('api/help-center/analytics', help_views.track_help_center_analytics, name='help_center_analytics'),
