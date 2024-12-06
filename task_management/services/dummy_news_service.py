@@ -1,117 +1,206 @@
-import random
-import requests
+from django.db import IntegrityError
 from datetime import datetime, timedelta
-from django.conf import settings
 from django.core.cache import cache
-from django.db.models import Q
-from ..models.help_center_models import (
-    Keyword, 
-    DailyKeywordSelection, 
-    ArticleCache,
-    KeywordCategory
-)
+import feedparser
+import random
+import json
+from .date_formatter import DateFormatter
+from .article_summaries import ArticleSummaryGenerator
+from ..models.help_center_models import ProfileKeywords, DailyArticleSelection
 
 class NewsService:
     def __init__(self):
-        self.api_key = settings.NEWS_API_KEY
-        self.base_url = 'https://newsapi.org/v2/everything'
+        self.medium_base_url = "https://medium.com/feed/tag/{}"
+        self.date_formatter = DateFormatter()
+        self.summary_generator = ArticleSummaryGenerator()
+
+    def get_daily_keywords(self, profile_type):
+        """Get or set cached daily keywords"""
+        cache_key = f'daily_keywords_{profile_type}_{datetime.now().date()}'
         
-    def get_daily_keywords(self, profile_type):  
-        """Get or create daily keyword selection"""
+        # Try to get cached keywords
+        cached_keywords = cache.get(cache_key)
+        if cached_keywords:
+            return json.loads(cached_keywords)
+            
+        # Get all keywords for this profile type
+        all_keywords = list(ProfileKeywords.objects.filter(
+            profile_type=profile_type
+        ).values_list('keyword', flat=True))
+        
+        # Select 10 random keywords
+        daily_keywords = random.sample(all_keywords, 10)
+        
+        # Cache the selection for 24 hours
+        cache.set(cache_key, json.dumps(daily_keywords), 86400)
+        
+        return daily_keywords
+
+    def fetch_medium_articles(self, profile_type):
+        """Fetch articles for daily keywords"""
+        print(f"Starting article fetch for profile: {profile_type}")
+        
         today = datetime.now().date()
-        print(f"Fetching keywords for date: {today}")
-        print(f"Profile type being searched: {profile_type}")  
-        
-        # Get keywords for profile type
-        available_keywords = Keyword.objects.filter(
-            category__profile_type=profile_type,  
-            is_active=True
-        )
-        print(f"Available keywords count: {available_keywords.count()}")
-        print(f"Sample keywords: {list(available_keywords.values_list('word', flat=True))[:5]}")
-        
-        daily_selection = DailyKeywordSelection.objects.filter(date=today).first()
-        print(f"Existing daily selection: {daily_selection}")  # Debug line
-        
-        if not daily_selection:
-            print("Creating new daily selection")  # Debug line
-            # Randomly select 10 keywords
-            if available_keywords.exists():
-                selected_keywords = random.sample(
-                    list(available_keywords), 
-                    min(10, available_keywords.count())
-                )
-                
-                # Create new daily selection
-                daily_selection = DailyKeywordSelection.objects.create()
-                daily_selection.keywords.set(selected_keywords)
-                print(f"Created new selection with {len(selected_keywords)} keywords")  # Debug line
-            else:
-                print("No available keywords found!")  # Debug line
-                return []
-        
-        return daily_selection.keywords.all()
-    
-    def fetch_articles(self, profile_type): 
-        """Fetch articles for selected keywords"""
-        print(f"Fetching articles for profile type: {profile_type}")  # Updated debug line
-        
-        cache_key = f'articles_{profile_type}_{datetime.now().date()}'
+        cache_key = f'daily_articles_{profile_type}_{today}'
+
         cached_articles = cache.get(cache_key)
-        
         if cached_articles:
-            print("Returning cached articles")  # Debug line
-            return cached_articles
-            
+            print("Found cached articles")
+            return json.loads(cached_articles)
+
         keywords = self.get_daily_keywords(profile_type)
-        print(f"Selected keywords count: {len(keywords)}")  # Debug line
+        print(f"Selected keywords: {keywords}")
         
-        if not keywords:
-            print("No keywords available!")  # Debug line
-            return []
+        articles = []
+        used_keywords = set()
+        retries = 0
+        max_retries = 30
+
+        def get_publication_platform(feed_entry, feed_data):
+            """Extract publication platform from feed"""
+            if hasattr(feed_data, 'feed'):
+                # Try to get publication from feed title
+                if hasattr(feed_data.feed, 'title'):
+                    feed_title = feed_data.feed.title
+                    # Known Medium publications
+                    known_publications = {
+                        'Better Humans': ['better-humans', 'betterhumans'],
+                        'Towards Data Science': ['towards-data-science', 'towardsdatascience'],
+                        'The Startup': ['the-startup', 'swlh'],
+                        'UX Collective': ['ux-collective', 'uxdesign'],
+                        'Better Programming': ['better-programming', 'betterprogramming'],
+                        'JavaScript in Plain English': ['javascript-in-plain-english'],
+                        'Level Up Coding': ['level-up-coding'],
+                        'Analytics Vidhya': ['analytics-vidhya'],
+                        'Geek Culture': ['geek-culture'],
+                        'The Writing Cooperative': ['the-writing-cooperative']
+                    }
+                    
+                    # Check if it's a known publication
+                    for pub_name, indicators in known_publications.items():
+                        if any(ind in feed_title.lower() for ind in indicators):
+                            return pub_name
+                    
+                    # If not known, clean up the feed title
+                    for suffix in [' – Medium', ' - Medium', ' | Medium']:
+                        if suffix in feed_title:
+                            return feed_title.split(suffix)[0]
+                            
+            # Default publication names based on content type
+            if hasattr(feed_entry, 'tags'):
+                tags = [tag.term.lower() for tag in feed_entry.tags] if hasattr(feed_entry, 'tags') else []
+                if 'programming' in tags or 'coding' in tags:
+                    return 'Tech Blog'
+                elif 'education' in tags or 'learning' in tags:
+                    return 'Education Blog'
+                elif 'productivity' in tags:
+                    return 'Productivity Blog'
             
-        all_articles = []
-        
-        for keyword in keywords:
-            print(f"Fetching articles for keyword: {keyword.word}")  # Debug line
-            # Fetch from API
-            params = {
-                'q': keyword.word,
-                'sortBy': 'relevancy',
-                'language': 'en',
-                'pageSize': 3,  # 3 articles per keyword
-                'apiKey': self.api_key
+            return 'Medium Publication'
+
+        while len(articles) < 10 and retries < max_retries:
+            available_keywords = [k for k in keywords if k not in used_keywords]
+            if not available_keywords:
+                break
+                    
+            keyword = random.choice(available_keywords)
+            used_keywords.add(keyword)
+            
+            try:
+                print(f"Trying keyword: {keyword}")
+                formatted_keyword = keyword.replace(' ', '-')
+                feed_url = f"{self.medium_base_url.format(formatted_keyword)}"
+                print(f"Feed URL: {feed_url}")
+                
+                feed = feedparser.parse(feed_url)
+                print(f"Found {len(feed.entries)} entries")
+                
+                if feed.entries:
+                    for entry in feed.entries[:3]:
+                        if not self.is_english_content(entry):
+                            print(f"Skipping non-English content for {keyword}")
+                            continue
+
+                        # Get formatted date using DateFormatter
+                        formatted_date = self.date_formatter.format_date(entry)
+                        if not formatted_date:
+                            print(f"Could not format date for article, using current time")
+                            formatted_date = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+
+                        # Get publication platform
+                        platform = get_publication_platform(entry, feed)
+                        
+                        article_data = {
+                            'title': entry.title,
+                            'url': entry.link,
+                            'source': platform,
+                            'published_date': formatted_date,
+                            'category': keyword.upper(),
+                            'highlight': self.summary_generator.get_article_summary(keyword, entry.title)
+                        }
+                        
+                        print(f"Created article: {article_data['title']}")
+                        print(f"Platform: {platform}")
+                        print(f"Date: {formatted_date}")
+
+                        try:
+                            DailyArticleSelection.objects.create(
+                                profile_type=profile_type,
+                                date=today,
+                                **article_data
+                            )
+                            articles.append(article_data)
+                            print(f"Successfully added article for {keyword}")
+                            break  # Found a good article for this keyword
+                        except IntegrityError:
+                            print(f"Duplicate article for {keyword}")
+                            continue
+                        
+            except Exception as e:
+                print(f"Error fetching articles for keyword {keyword}: {str(e)}")
+            
+            retries += 1
+
+        # If we still don't have enough articles, fill with remaining keywords
+        while len(articles) < 10:
+            remaining_keywords = [k for k in keywords if k not in used_keywords]
+            if not remaining_keywords:
+                remaining_keywords = keywords
+                    
+            keyword = random.choice(remaining_keywords)
+            current_time = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+            article_data = {
+                'title': f'Advanced Guide to {keyword.title()}',
+                'url': f'https://medium.com/tag/{keyword.replace(" ", "-")}',
+                'source': 'Medium Publication',
+                'published_date': current_time,
+                'category': keyword.upper(),
+                'highlight': self.summary_generator.get_article_summary(keyword, '')
             }
             
             try:
-                response = requests.get(self.base_url, params=params)
-                data = response.json()
-                
-                if data.get('status') == 'ok':
-                    articles = data.get('articles', [])
-                    print(f"Found {len(articles)} articles for keyword {keyword.word}")  # Debug line
-                    for article in articles:
-                        article_data = {
-                            'title': article.get('title', ''),
-                            'description': article.get('description', ''),
-                            'url': article.get('url', ''),
-                            'category': keyword.category.name
-                        }
-                        all_articles.append(article_data)
-                else:
-                    print(f"API error for keyword {keyword.word}: {data.get('message')}")  # Debug line
-            
-            except Exception as e:
-                print(f"Error fetching articles for keyword {keyword.word}: {e}")  # Debug line
+                DailyArticleSelection.objects.create(
+                    profile_type=profile_type,
+                    date=today,
+                    **article_data
+                )
+                articles.append(article_data)
+                used_keywords.add(keyword)
+            except IntegrityError:
                 continue
-        
-        # Cache the final results
-        if all_articles:
-            random.shuffle(all_articles)  # Randomize order
-            all_articles = all_articles[:10]  # Keep only top 10
-            cache.set(cache_key, all_articles, 86400)  # Cache for 24 hours
-            print(f"Cached {len(all_articles)} articles")  # Debug line
-        else:
-            print("No articles found!")  # Debug line
-        
-        return all_articles
+
+        print(f"Total articles found: {len(articles)}")
+
+        if articles:
+            cache.set(cache_key, json.dumps(articles), 86400)
+            print("Articles cached successfully")
+
+        return articles[:10]
+    
+    def is_english_content(self, entry):
+        """Check if content is in English"""
+        if hasattr(entry, 'lang'):
+            return entry.lang == 'en'
+        title = entry.title.lower()
+        english_indicators = ['the', 'and', 'or', 'to', 'a', 'in', 'that', 'for']
+        return any(word in title for word in english_indicators)

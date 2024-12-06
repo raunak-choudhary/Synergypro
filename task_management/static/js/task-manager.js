@@ -1,398 +1,545 @@
-document.addEventListener('DOMContentLoaded', function() {
-
-    const sections = [
-        {
-            wrapper: document.getElementById('in-progress-tasks'),
-            leftArrow: document.querySelector('.left-arrow.in-progress-arrow'),
-            rightArrow: document.querySelector('.right-arrow.in-progress-arrow')
-        },
-        {
-            wrapper: document.getElementById('completed-tasks'),
-            leftArrow: document.querySelector('.left-arrow.completed-arrow'),
-            rightArrow: document.querySelector('.right-arrow.completed-arrow')
-        },
-        {
-            wrapper: document.getElementById('overdue-tasks'),
-            leftArrow: document.querySelector('.left-arrow.overdue-arrow'),
-            rightArrow: document.querySelector('.right-arrow.overdue-arrow')
-        }
-    ];
-
-    // Function to update arrow visibility
-    function updateArrowVisibility() {
-        sections.forEach(section => {
-            if (!section.wrapper) return;
-
-            const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
-
-            if (isScrollable) {
-                section.leftArrow.style.display = 'flex';
-                section.rightArrow.style.display = 'flex';
-
-                const isAtStart = section.wrapper.scrollLeft <= 0;
-                const isAtEnd = section.wrapper.scrollLeft >= section.wrapper.scrollWidth - section.wrapper.clientWidth;
-
-                if (isAtStart) {
-                    section.leftArrow.style.display = 'none';
-                }
-                if (isAtEnd) {
-                    section.rightArrow.style.display = 'none';
-                }
-            } else {
-                section.leftArrow.style.display = 'none';
-                section.rightArrow.style.display = 'none';
-            }
-        });
+class TaskManager {
+    constructor() {
+        this.initializeElements();
+        this.attachEventListeners();
+        this.fetchTasks();
     }
 
-    sections.forEach(section => {
-        if (!section.wrapper) return;
-
-        section.leftArrow.addEventListener('click', () => {
-            section.wrapper.scrollBy({ left: -300, behavior: 'smooth' });
-        });
-
-        section.rightArrow.addEventListener('click', () => {
-            section.wrapper.scrollBy({ left: 300, behavior: 'smooth' });
-        });
-
-        section.wrapper.addEventListener('scroll', updateArrowVisibility);
-    });
-
-    window.addEventListener('resize', updateArrowVisibility);
-
-    // Category filter functionality
-    const categoryFilter = document.getElementById('categoryFilter');
-    let allTasks = []; // Store all tasks
-
-    function loadCategories() {
-        fetch('/api/tasks/categories/')
-            .then(response => response.json())
-            .then(data => {
-                const categories = data.categories;
-                categoryFilter.innerHTML = '<option value="">All Categories</option>';
-
-                if (categories.length === 0) {
-                    const option = new Option('No categories', '');
-                    option.disabled = true;
-                    categoryFilter.add(option);
-                } else {
-                    categories.forEach(category => {
-                        categoryFilter.add(new Option(category.name, category.id));
-                    });
-                }
-            })
-            .catch(error => console.error('Error loading categories:', error));
-    }
-
-    function filterTasks() {
-        const selectedCategoryId = categoryFilter.value;
-        const filteredTasks = selectedCategoryId ?
-            allTasks.filter(task => task.category && task.category.id.toString() === selectedCategoryId) :
-            allTasks;
-
-        const inProgressTasks = document.getElementById('in-progress-tasks');
-        const completedTasks = document.getElementById('completed-tasks');
-        const overdueTasks = document.getElementById('overdue-tasks');
-
-        // Clear existing tasks
-        inProgressTasks.innerHTML = '';
-        completedTasks.innerHTML = '';
-        overdueTasks.innerHTML = '';
-
-        // Add filtered tasks
-        filteredTasks.forEach(task => {
-            const taskElement = createTaskElement(task);
-            if (task.status === 'completed') {
-                completedTasks.appendChild(taskElement);
-            } else if (task.is_overdue) {
-                overdueTasks.appendChild(taskElement);
-            } else {
-                inProgressTasks.appendChild(taskElement);
+    initializeElements() {
+        // Initialize task section elements
+        this.sections = [
+            {
+                id: 'in-progress-tasks',
+                wrapper: document.getElementById('in-progress-tasks'),
+                leftArrow: document.querySelector('.in-progress-arrow.left-arrow'),
+                rightArrow: document.querySelector('.in-progress-arrow.right-arrow'),
+                countElement: document.getElementById('inProgressCount')
+            },
+            {
+                id: 'completed-tasks',
+                wrapper: document.getElementById('completed-tasks'),
+                leftArrow: document.querySelector('.completed-arrow.left-arrow'),
+                rightArrow: document.querySelector('.completed-arrow.right-arrow'),
+                countElement: document.getElementById('completedCount')
+            },
+            {
+                id: 'overdue-tasks',
+                wrapper: document.getElementById('overdue-tasks'),
+                leftArrow: document.querySelector('.overdue-arrow.left-arrow'),
+                rightArrow: document.querySelector('.overdue-arrow.right-arrow'),
+                countElement: document.getElementById('overdueCount')
             }
-        });
-    }
-
-    // Add category filter event listener
-    categoryFilter.addEventListener('change', () => {
-        filterTasks();
-    });
-
-    // Initialize categories and tasks
-    loadCategories();
-    fetchTasks();
-
-    // Add at the beginning of your DOMContentLoaded event listener
-    const createTaskBtn = document.getElementById('createTaskBtn');
-    const modal = document.getElementById('taskModal');
-    const closeBtn = modal.querySelector('.close');
-    const taskForm = document.getElementById('taskForm');
-
-    createTaskBtn.addEventListener('click', () => {
-        modal.style.display = 'flex';
-        // Set default dates
-        const now = new Date();
-        document.getElementById('taskStartDate').value = now.toISOString().split('T')[0];
-        document.getElementById('taskStartTime').value = now.toTimeString().slice(0,5);
-
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        document.getElementById('taskEndDate').value = tomorrow.toISOString().split('T')[0];
-        document.getElementById('taskEndTime').value = now.toTimeString().slice(0,5);
-    });
-
-    closeBtn.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    taskForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // Get form values
-        const title = document.getElementById('taskTitle').value;
-        const description = document.getElementById('taskDescription').value;
-        const startDate = document.getElementById('taskStartDate').value;
-        const startTime = document.getElementById('taskStartTime').value;
-        const endDate = document.getElementById('taskEndDate').value;
-        const endTime = document.getElementById('taskEndTime').value;
-
-        // Create start and end datetime strings
-        const startDateTime = new Date(`${startDate}T${startTime}`).toISOString();
-        const endDateTime = new Date(`${endDate}T${endTime}`).toISOString();
-
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('start_date', startDateTime);
-        formData.append('end_date', endDateTime);
-        formData.append('status', 'yet_to_start');
-
-        try {
-            const response = await fetch('/api/tasks/create/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {  // Check HTTP status first
-                modal.style.display = 'none';
-                taskForm.reset();
-                fetchTasks(); // Refresh the task list
-            } else {
-                alert('Failed to create task: ' + (data.message || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred while creating the task');
-        }
-    });
-
-    function fetchTasks() {
-        fetch('/api/tasks/')
-            .then(response => response.json())
-            .then(data => {
-                allTasks = data; // Store all tasks globally
-                filterTasks(); // Use filterTasks to display them
-            })
-            .catch(error => console.error('Error fetching tasks:', error));
-    }
-
-    function createTaskElement(task) {
-        const taskDiv = document.createElement('div');
-        taskDiv.className = 'task-tile';
-        taskDiv.dataset.taskId = task.id;
-
-        // Format the date display
-        const endDate = new Date(task.end_date);
-        const now = new Date();
-        const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-
-        let dateDisplay;
-        if (task.status === "completed") {
-            dateDisplay = '';
-        } else if (daysLeft < 0) {
-            dateDisplay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 4px; display: inline-block;">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
-            </svg>${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
-        } else if (daysLeft <= 7) {
-            dateDisplay = `${daysLeft} day(s) left`;
-        } else {
-            dateDisplay = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 4px; display: inline-block;">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
-            </svg>${endDate.toLocaleString('default', { month: 'short' })} ${endDate.getDate()}`;
-        }
-
-        // TODO: Replace with actual progress
-        const progress = Math.floor(Math.random() * 100);
-
-
-
-        const statusElement = document.createElement('p');
-        statusElement.className = 'task-status';
-        statusElement.textContent = `Status: ${task.status.replace('_', ' ')}`;
-        taskDiv.appendChild(statusElement);
-
-        // Generate dynamic colors based on category name
-        function generatePastelColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-
-            // Generate pastel background color
-            const h = hash % 360;
-            const s = 30 + (hash % 30); // Keep saturation low for pastel
-            const l = 85 + (hash % 10); // Keep lightness high for pastel
-
-            // Generate darker text color with same hue
-            const textL = 30; // Darker text for contrast
-
-            return {
-                background: `hsl(${h}, ${s}%, ${l}%)`,
-                text: `hsl(${h}, ${s}%, ${textL}%)`
-            };
-        }
-
-        let categoryHTML = '';
-        if (task.category) {
-            const colors = generatePastelColor(task.category.name);
-            categoryHTML = `
-                <div class="category-tag" style="background-color: ${colors.background}; color: ${colors.text}">
-                    ${task.category.name}
-                </div>
-            `;
-        }
-
-        taskDiv.innerHTML = `
-            <div class="task-header">
-                <h3>${task.title}</h3>
-                <div class="menu-container">
-                    <button class="menu-dots">⋮</button>
-                    <div class="menu-dropdown">
-                        <button class="menu-item delete-option">Delete</button>
+        ];
+    
+        // Initialize task groups
+        this.taskGroups = {
+            inProgress: [],
+            completed: [],
+            overdue: []
+        };
+    
+        // Add delete modal HTML
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="deleteModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Delete Task</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="cancel-delete">Cancel</button>
+                        <button class="confirm-delete">Delete</button>
                     </div>
                 </div>
             </div>
-            ${categoryHTML}
-            <div class="task-footer">
-                <div class="progress-bar-container">
-                    <div class="progress-bar" style="width: ${progress}%"></div>
-                    <span class="progress-text">${progress}%</span>
+        `);
+    
+        // Store modal elements
+        this.deleteModal = document.getElementById('deleteModal');
+        this.closeModalBtn = this.deleteModal.querySelector('.close-modal');
+        this.cancelDeleteBtn = this.deleteModal.querySelector('.cancel-delete');
+        this.confirmDeleteBtn = this.deleteModal.querySelector('.confirm-delete');
+        
+        // Store current task ID for deletion
+        this.taskToDelete = null;
+    
+        // Add modal event listeners
+        this.closeModalBtn.addEventListener('click', () => this.closeDeleteModal());
+        this.cancelDeleteBtn.addEventListener('click', () => this.closeDeleteModal());
+        this.confirmDeleteBtn.addEventListener('click', () => this.confirmDelete());
+    
+        // Add emotion bar only to in-progress section
+        const inProgressSection = document.querySelector('#in-progress-tasks').parentElement;
+        const emotionBarHTML = `
+            <div class="emotion-bar-container">
+                <div class="emotion-bar">
+                    <div class="emotion-bar-fill">
+                        <div class="emotion-emoji">😢</div>
+                    </div>
                 </div>
-                <p class="task-dates">${dateDisplay}</p>
+                <div class="emotion-text">Task Completion Progress</div>
             </div>
         `;
-
-        const menuButton = taskDiv.querySelector('.menu-dots');
-        const menuDropdown = taskDiv.querySelector('.menu-dropdown');
-        const deleteButton = taskDiv.querySelector('.delete-option');
-
-        menuButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuDropdown.classList.toggle('show');
-        });
-
-        deleteButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteTask(task.id);
-        });
-
-        taskDiv.addEventListener('click', () => openTaskDetail(task.id));
-        return taskDiv;
+    
+        inProgressSection.insertAdjacentHTML('beforeend', emotionBarHTML);
     }
 
-    // Add delete task function
-    function deleteTask(taskId) {
+    attachEventListeners() {
+        // Attach carousel navigation for each section
+        this.sections.forEach(section => {
+            if (section.leftArrow) {
+                section.leftArrow.addEventListener('click', () => {
+                    this.scrollSection(section.wrapper, -300);
+                });
+            }
+            if (section.rightArrow) {
+                section.rightArrow.addEventListener('click', () => {
+                    this.scrollSection(section.wrapper, 300);
+                });
+            }
 
-        if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
-            fetch(`/api/task/${taskId}/delete/`, {
+            // Add scroll event listener for arrow visibility
+            if (section.wrapper) {
+                section.wrapper.addEventListener('scroll', () => {
+                    this.updateArrowVisibility(section);
+                });
+            }
+        });
+
+        // Window resize listener
+        window.addEventListener('resize', () => {
+            this.sections.forEach(section => {
+                this.updateArrowVisibility(section);
+            });
+        });
+    }
+
+    showDeleteModal(taskId) {
+        this.taskToDelete = taskId;
+        this.deleteModal.classList.add('show');
+    }
+    
+    closeDeleteModal() {
+        this.deleteModal.classList.remove('show');
+        this.taskToDelete = null;
+    }
+    
+    async confirmDelete() {
+        if (!this.taskToDelete) return;
+        
+        try {
+            const response = await fetch(`/api/task/${this.taskToDelete}/delete/`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    fetchTasks(); // Refresh the task list
-                } else {
-                    alert('Failed to delete task');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
-
-    // Add CSRF token function
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function openTaskDetail(taskId) {
-        window.location.href = `/task/${taskId}/`;
-    }
-
-    function checkForStatusUpdate() {
-        const statusUpdated = sessionStorage.getItem('statusUpdated');
-        if (statusUpdated) {
-            fetchTasks(); // Refresh tasks
-            sessionStorage.removeItem('statusUpdated');
-        }
-    }
-
-    fetchTasks();
-    checkForStatusUpdate();
-
-    function initializeLogout() {
-        const logoutLink = document.querySelector('a[href*="logout"]');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    const response = await fetch('/api/logout/', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        }
-                    });
-                    if (response.ok) {
-                        window.location.href = '/';
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
+                    'X-CSRFToken': this.getCsrfToken()
                 }
             });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            if (data.status === 'success') {
+                this.closeDeleteModal();
+                await this.fetchTasks();
+                this.showNotification('Task deleted successfully');
+            } else {
+                throw new Error(data.message || 'Failed to delete task');
+            }
+        } catch (error) {
+            this.handleError(error, 'Error deleting task');
         }
     }
 
-    initializeLogout();
-});
+    updateEmotionBar() {
+        const inProgressTasks = this.taskGroups.inProgress;
+        if (inProgressTasks.length === 0) return;
+    
+        // Calculate average progress
+        const totalProgress = inProgressTasks.reduce((sum, task) => sum + (task.task_progress), 0);
+        const averageProgress = totalProgress / inProgressTasks.length;
+    
+        // Select emoji based on progress
+        let emoji = '😢'; // 0-20%
+        if (averageProgress > 80) emoji = '🎉';
+        else if (averageProgress > 60) emoji = '😊';
+        else if (averageProgress > 40) emoji = '😐';
+        else if (averageProgress > 20) emoji = '😕';
+    
+        // Update emotion bar
+        const emotionBar = document.querySelector('.emotion-bar-fill');
+        const emojiElement = document.querySelector('.emotion-emoji');
+        
+        if (emotionBar && emojiElement) {
+            emotionBar.style.width = `${averageProgress}%`;
+            emojiElement.textContent = emoji;
+        }
+    }
 
-document.querySelector('.scroll-arrow').addEventListener('click', function() {
-    const tasksWrapper = document.querySelector('.tasks-wrapper');
-    tasksWrapper.scrollBy({
-        left: 300,
-        behavior: 'smooth'
-    });
+    async fetchTasks() {
+        try {
+            const response = await fetch('/api/tasks/');
+            console.log('API Response Status:', response.status); 
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Fetched Tasks:', data); 
+            
+            // Clear existing tasks and counters
+            this.clearAllTasks();
+            
+            // Sort tasks into groups
+            this.sortTasks(data);
+            console.log('Sorted Task Groups:', this.taskGroups); 
+            
+            // Update task counts
+            this.updateTaskCounts();
+            
+            // Populate task sections
+            this.populateTaskSections();
+            
+            // Update carousel arrows
+            this.updateAllArrowsVisibility();
+        } catch (error) {
+            console.error('Error in fetchTasks:', error);
+            this.handleError(error, 'Error fetching tasks');
+        }
+    }
+
+    clearAllTasks() {
+        this.sections.forEach(section => {
+            if (section.wrapper) {
+                section.wrapper.innerHTML = '';
+            }
+        });
+        this.taskGroups = {
+            inProgress: [],
+            completed: [],
+            overdue: []
+        };
+    }
+
+    sortTasksByDueDate(tasks) {
+        return [...tasks].sort((a, b) => {
+            const dateA = new Date(a.end_date);
+            const dateB = new Date(b.end_date);
+            return dateA - dateB;
+        });
+    }
+
+    sortTasks(tasks) {
+        tasks.forEach(task => {
+            if (task.status === 'completed') {
+                this.taskGroups.completed.push(task);
+            } else if (task.is_overdue) {
+                this.taskGroups.overdue.push(task);
+            } else {
+                this.taskGroups.inProgress.push(task);
+            }
+        });
+    
+        // Sort each group by due date
+        this.taskGroups.inProgress = this.sortTasksByDueDate(this.taskGroups.inProgress);
+        this.taskGroups.completed = this.sortTasksByDueDate(this.taskGroups.completed);
+        this.taskGroups.overdue = this.sortTasksByDueDate(this.taskGroups.overdue);
+    }
+
+    updateTaskCounts() {
+        const countText = (count) => `${count} task${count !== 1 ? 's' : ''}`;
+        
+        this.sections.forEach(section => {
+            if (section.countElement) {
+                let count = 0;
+                if (section.id === 'in-progress-tasks') {
+                    count = this.taskGroups.inProgress.length;
+                } else if (section.id === 'completed-tasks') {
+                    count = this.taskGroups.completed.length;
+                } else if (section.id === 'overdue-tasks') {
+                    count = this.taskGroups.overdue.length;
+                }
+                section.countElement.textContent = countText(count);
+            }
+        });
+    }
+
+    populateTaskSections() {
+        // Clear existing tasks first
+        this.sections.forEach(section => {
+            if (section.wrapper) {
+                section.wrapper.innerHTML = '';
+            }
+        });
+    
+        // In Progress tasks
+        if (this.taskGroups.inProgress.length > 0) {
+            this.taskGroups.inProgress.forEach(task => {
+                const taskElement = this.createTaskCard(task);
+                this.sections[0].wrapper?.appendChild(taskElement);
+            });
+        }
+    
+        // Completed tasks
+        if (this.taskGroups.completed.length > 0) {
+            this.taskGroups.completed.forEach(task => {
+                const taskElement = this.createTaskCard(task);
+                this.sections[1].wrapper?.appendChild(taskElement);
+            });
+        }
+    
+        // Overdue tasks
+        if (this.taskGroups.overdue.length > 0) {
+            this.taskGroups.overdue.forEach(task => {
+                const taskElement = this.createTaskCard(task);
+                this.sections[2].wrapper?.appendChild(taskElement);
+            });
+        }
+    
+        // Update emotion bar
+        this.updateEmotionBar();
+        
+        // Update visibility of scroll arrows
+        this.updateAllArrowsVisibility();
+    }
+
+    createTaskCard(task) {
+        const taskCard = document.createElement('div');
+        taskCard.className = 'task-card';
+        taskCard.dataset.taskId = task.id;
+    
+        const categoryHTML = task.category ? this.generateCategoryHTML(task.category) : '';
+    
+        // Get user data from the profile dropdown in header
+        const profileDropdown = document.getElementById('profileDropdown');
+        const headerAvatar = profileDropdown.querySelector('.avatar-img');
+        const avatarSrc = headerAvatar.src; // This will get the already processed image URL
+    
+        taskCard.innerHTML = `
+            <div class="task-header">
+                <div class="title-section">
+                    <h3 class="task-title">${task.title}</h3>
+                    <span class="priority-label">${task.priority} &#8226; </span>
+                    <span class="category-label">Category</span>
+                </div>
+                <div class="menu-container">
+                    <button class="menu-dots">⋮</button>
+                    <div class="menu-dropdown">
+                        <button class="menu-item delete-option">
+                            <span>🗑️</span>Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="task-footer">
+                <div class="task-progress-section">
+                    <div class="progress-header">
+                        <span class="progress-label">Progress</span>
+                        <span class="progress-text">${task.task_progress}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${task.task_progress}%"></div>
+                    </div>
+                </div>
+                <div class="task-meta">
+                    ${this.formatTaskDate(task.end_date, task.status)}
+                    <div class="task-members">
+                        <img src="${avatarSrc}"
+                            alt="User" 
+                            class="member-avatar"
+                        />
+                    </div>
+                </div>
+            </div>
+        `;
+    
+        this.attachTaskCardListeners(taskCard, task.id);
+        return taskCard;
+    }
+
+    attachTaskCardListeners(taskCard, taskId) {
+        const menuButton = taskCard.querySelector('.menu-dots');
+        const menuDropdown = taskCard.querySelector('.menu-dropdown');
+        const deleteButton = taskCard.querySelector('.delete-option');
+    
+        menuButton?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown?.classList.toggle('show');
+        });
+    
+        deleteButton?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuDropdown?.classList.remove('show');
+            this.showDeleteModal(taskId);
+        });
+    
+        taskCard.addEventListener('click', () => {
+            window.location.href = `/task/${taskId}/`;
+        });
+    }
+
+    async deleteTask(taskId) {
+        if (!confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/task/${taskId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': this.getCsrfToken()
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                await this.fetchTasks();
+                this.showNotification('Task deleted successfully');
+            } else {
+                throw new Error(data.message || 'Failed to delete task');
+            }
+        } catch (error) {
+            this.handleError(error, 'Error deleting task');
+        }
+    }
+
+    formatTaskDate(endDate, status) {
+        if (!endDate) return '';
+        
+        // For completed tasks
+        if (status === "completed") {
+            return `
+                <div class="due-date completed">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    Completed
+                </div>`;
+        }
+    
+        const end = new Date(endDate);
+        const now = new Date();
+        const diffInHours = Math.ceil((end - now) / (1000 * 60 * 60));
+        const diffInDays = Math.ceil(diffInHours / 24);
+    
+        let dateContent;
+        let className;
+    
+        // For overdue tasks
+        if (diffInDays < 0) {
+            dateContent = `Overdue by ${Math.abs(diffInDays)} days`;
+            className = 'overdue';
+        }
+        // For tasks due within 24 hours
+        else if (diffInHours <= 24) {
+            dateContent = `${diffInHours} hours left`;
+            className = 'urgent';
+        }
+        // For tasks due within 7 days
+        else if (diffInDays <= 7) {
+            dateContent = `${diffInDays} days left`;
+            className = 'upcoming';
+        }
+        // For tasks due after 7 days
+        else {
+            dateContent = `Due ${end.toLocaleString('default', { month: 'short' })} ${end.getDate()}`;
+            className = 'future';
+        }
+    
+        return `
+            <div class="due-date ${className}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                ${dateContent}
+            </div>`;
+    }
+
+    generateCategoryHTML(category) {
+        const colors = this.generatePastelColor(category.name);
+        return `
+            <div class="category-tag" style="background-color: ${colors.background}; color: ${colors.text}">
+                ${category.name}
+            </div>
+        `;
+    }
+
+    generatePastelColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const h = hash % 360;
+        const s = 30 + (hash % 30);
+        const l = 85 + (hash % 10);
+        return {
+            background: `hsl(${h}, ${s}%, ${l}%)`,
+            text: `hsl(${h}, ${s}%, 30%)`
+        };
+    }
+
+    scrollSection(wrapper, amount) {
+        wrapper?.scrollBy({
+            left: amount,
+            behavior: 'smooth'
+        });
+    }
+
+    updateArrowVisibility(section) {
+        if (!section.wrapper || !section.leftArrow || !section.rightArrow) return;
+
+        const isScrollable = section.wrapper.scrollWidth > section.wrapper.clientWidth;
+        const isAtStart = section.wrapper.scrollLeft <= 0;
+        const isAtEnd = section.wrapper.scrollLeft >= section.wrapper.scrollWidth - section.wrapper.clientWidth;
+
+        section.leftArrow.style.display = isScrollable && !isAtStart ? 'flex' : 'none';
+        section.rightArrow.style.display = isScrollable && !isAtEnd ? 'flex' : 'none';
+    }
+
+    updateAllArrowsVisibility() {
+        this.sections.forEach(section => {
+            this.updateArrowVisibility(section);
+        });
+    }
+
+    handleError(error, message = 'An error occurred') {
+        console.error(`${message}:`, error);
+        this.showNotification(message, 'error');
+    }
+
+    showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    }
+}
+
+// Initialize TaskManager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.taskManager = new TaskManager();
 });

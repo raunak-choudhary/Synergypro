@@ -1,197 +1,123 @@
 from django.shortcuts import render, get_object_or_404
-from ..models.task_models import Task, TaskFile, TaskCategory
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from ..models.task_models import Task, TaskComment
 import json
-from django.utils.dateparse import parse_datetime
 
+@login_required
 def tasks_view(request):
     tasks = Task.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'task_management/dashboard/tasks.html', {'tasks': tasks})
 
+@login_required
+def task_detail_view(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    if task.user != request.user:
+        raise PermissionDenied
+    return render(request, 'task_management/dashboard/task_detail.html', {'task': task})
+
+@login_required
 def tasks_api(request):
     tasks = Task.objects.filter(user=request.user).order_by('-created_at')
-    tasks_data = [
-        {
+    tasks_data = [{
+        'id': task.id,
+        'title': task.title,
+        'description': task.description,
+        'start_date': task.start_date.isoformat() if task.start_date else None,
+        'start_time': task.start_time.isoformat() if task.start_time else None,
+        'end_date': task.end_date.isoformat() if task.end_date else None,
+        'end_time': task.end_time.isoformat() if task.end_time else None,
+        'status': task.status,
+        'priority': task.priority,
+        'task_progress': task.task_progress,
+        'is_overdue': task.is_overdue(),
+    } for task in tasks]
+    return JsonResponse(tasks_data, safe=False)
+
+@login_required
+def task_detail_api(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    
+    if request.method == 'GET':
+        return JsonResponse({
             'id': task.id,
             'title': task.title,
             'description': task.description,
             'start_date': task.start_date.isoformat() if task.start_date else None,
+            'start_time': task.start_time.strftime('%H:%M') if task.start_time else None,
             'end_date': task.end_date.isoformat() if task.end_date else None,
+            'end_time': task.end_time.strftime('%H:%M') if task.end_time else None,
             'status': task.status,
-            'is_overdue': task.is_overdue(),
-            'category': {
-                'id': task.category.id,
-                'name': task.category.name
-            } if task.category else None
-        }
-        for task in tasks
-    ]
-    return JsonResponse(tasks_data, safe=False)
-
-def get_task_files(request, task_id):
-    task = get_object_or_404(Task, id=task_id, user=request.user)
-    files = task.files.all()
-    files_data = [
-        {
-            'id': file.id,
-            'name': file.file.name,
-            'url': file.file.url,
-            'uploaded_at': file.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')
-        }
-        for file in files
-    ]
-    return JsonResponse(files_data, safe=False)
-
-@csrf_exempt
-def upload_task_file(request, task_id):
-    if request.method == 'POST':
-        task = get_object_or_404(Task, id=task_id, user=request.user)
-        if 'file' in request.FILES:
-            file = request.FILES['file']
-            task_file = TaskFile.objects.create(task=task, file=file)
-            return JsonResponse({
-                'status': 'success',
-                'file_id': task_file.id,
-                'file_url': task_file.file.url
-            })
-    return JsonResponse({'status': 'error'}, status=400)
-
-@csrf_exempt
-def delete_task_file(request, file_id):
-    if request.method == 'DELETE':
+            'priority': task.priority,
+            'task_progress': task.task_progress,
+        })
+    
+    elif request.method == 'PUT':
         try:
-            file = get_object_or_404(TaskFile, id=file_id, task__user=request.user)
-            file.delete()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
-@csrf_exempt
-def update_task(request, task_id):
-    if request.method == 'POST':
-        try:
-            task = get_object_or_404(Task, id=task_id, user=request.user)
             data = json.loads(request.body)
-
-            if 'category_id' in data:
-                category_id = data.get('category_id')
-                if category_id:
-                    category = get_object_or_404(TaskCategory, id=category_id, user=request.user)
-                    task.category = category
-                else:
-                    task.category = None
-
-            # Update other fields
-            if 'title' in data:
-                task.title = data.get('title')
-            if 'description' in data:
-                task.description = data.get('description')
-            if 'status' in data:
-                task.status = data.get('status')
-            if 'start_date' in data:
-                task.start_date = parse_datetime(data.get('start_date'))
-            if 'end_date' in data:
-                task.end_date = parse_datetime(data.get('end_date'))
-
+            task.title = data.get('title', task.title)
+            task.description = data.get('description', task.description)
+            task.start_date = data.get('start_date', task.start_date)
+            task.start_time = data.get('start_time', task.start_time)
+            task.end_date = data.get('end_date', task.end_date)
+            task.end_time = data.get('end_time', task.end_time)
+            task.status = data.get('status', task.status)
+            task.priority = data.get('priority', task.priority)
+            task.task_progress = data.get('task_progress', task.task_progress)
             task.save()
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+            return JsonResponse({'error': str(e)}, status=400)
+    
+    elif request.method == 'DELETE':
+        task.delete()
+        return JsonResponse({'status': 'success'})
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
-def task_detail_view(request, task_id):
+@login_required
+def task_comments_api(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
-    task_files = task.files.all()
-    categories = TaskCategory.objects.filter(user=request.user)
-
-    # Add category information to the context
-    context = {
-        'task': task,
-        'task_files': task_files,
-        'categories': categories,
-        'selected_category': task.category.id if task.category else ''
-    }
-    return render(request, 'task_management/dashboard/task_detail.html', context)
-
-@csrf_exempt
-def delete_task(request, task_id):
-    if request.method == 'DELETE':
-        try:
-            task = get_object_or_404(Task, id=task_id, user=request.user)
-            task.delete()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
-
-def get_task_stats(request):
-    user_tasks = Task.objects.filter(user=request.user)
-
-    stats = {
-        'total_tasks': user_tasks.count(),
-        'in_progress': user_tasks.filter(status='yet_to_start').count() + user_tasks.filter(status='in_progress').count(),
-        'completed': user_tasks.filter(status='completed').count(),
-        'overdue': len([task for task in user_tasks if task.is_overdue()])
-    }
-
-    print(stats)
-
-    return stats
-
-
-@csrf_exempt
-def create_category(request):
-    if request.method == 'POST':
+    
+    if request.method == 'GET':
+        comments = task.comments.all()
+        comments_data = [{
+            'id': comment.id,
+            'text': comment.text,
+            'author': comment.user.get_full_name() or comment.user.username,
+            'created_at': comment.created_at.isoformat(),
+        } for comment in comments]
+        return JsonResponse(comments_data, safe=False)
+    
+    elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            name = data.get('name')
-
-            category = TaskCategory.objects.create(
+            comment = TaskComment.objects.create(
+                task=task,
                 user=request.user,
-                name=name
+                text=data['text']
             )
-
             return JsonResponse({
-                'status': 'success',
-                'category': {
-                    'id': category.id,
-                    'name': category.name
-                }
+                'id': comment.id,
+                'text': comment.text,
+                'author': comment.user.get_full_name() or comment.user.username,
+                'created_at': comment.created_at.isoformat(),
             })
         except Exception as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': str(e)
-            }, status=400)
-
-
-def get_user_categories(request):
-    categories = TaskCategory.objects.filter(user=request.user)
-    return JsonResponse({
-        'categories': [
-            {'id': cat.id, 'name': cat.name}
-            for cat in categories
-        ]
-    })
-
+            return JsonResponse({'error': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @csrf_exempt
-def update_task_category(request, task_id):
-    if request.method == 'POST':
-        try:
-            task = get_object_or_404(Task, id=task_id, user=request.user)
-            data = json.loads(request.body)
-            category_id = data.get('category_id')
-
-            if category_id:
-                category = get_object_or_404(TaskCategory, id=category_id, user=request.user)
-                task.category = category
-            else:
-                task.category = None
-
-            task.save()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+@login_required
+def delete_task(request, task_id):
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    try:
+        task.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

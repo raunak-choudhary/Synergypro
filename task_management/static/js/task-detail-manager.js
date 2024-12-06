@@ -1,275 +1,569 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('taskFile');
-    const uploadForm = document.getElementById('uploadForm');
-    const taskId = window.location.pathname.split('/')[2];
-    const savedCategory = localStorage.getItem(`task_${taskId}_category`);
+class TaskDetailManager {
+    constructor() {
+        console.log('Initializing TaskDetailManager');
+        if (!document.getElementById('notification-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'notification-styles';
+            styles.textContent = `
+                .toast-container {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                }
+                .toast {
+                    display: flex;
+                    align-items: center;
+                    padding: 16px 20px;
+                    border-radius: 12px;
+                    margin-bottom: 10px;
+                    min-width: 300px;
+                    background: #1E1E2D;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    animation: slideIn 0.5s ease-out forwards;
+                    color: #fff;
+                }
+                .toast.success { border-left: 4px solid #0BB783; }
+                .toast.error { border-left: 4px solid #F64E60; }
+                .toast-icon {
+                    margin-right: 12px;
+                    display: flex;
+                    align-items: center;
+                }
+                .toast-message {
+                    flex-grow: 1;
+                    font-size: 14px;
+                }
+                .toast-close {
+                    cursor: pointer;
+                    opacity: 0.7;
+                    margin-left: 12px;
+                }
+                .toast-close:hover {
+                    opacity: 1;
+                }
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(styles);
+        }
 
-    if (savedCategory) {
-        categorySelect.value = savedCategory;
+        this.initialized = false;
+        this.initializeElements();
+        if (this.initialized) {
+            console.log('Initialization successful, setting up components');
+            this.attachEventListeners();
+            this.loadTaskDetails();
+            this.loadComments();
+            console.log('All components initialized');
+        } else {
+            console.error('Initialization failed');
+        }
     }
 
-    // Handle drag and drop
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length) {
-            fileInput.files = files;
-            handleFileUpload(files[0]);
-        }
-    });
-
-    // Handle file input change
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) {
-            handleFileUpload(e.target.files[0]);
-        }
-    });
-
-    function handleFileUpload(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch(`/task/${taskId}/upload/`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Add the new file to the list without reloading the page
-                const fileList = document.getElementById('fileList');
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.style.color = '#666';
-                fileItem.innerHTML = `
-                    <p>File: <a href="${data.file_url}" class="download-btn" download>${file.name}</a></p>
-                    <p>Uploaded at: ${new Date().toLocaleString()}</p>
-                `;
-                fileList.appendChild(fileItem);
-
-                // Clear the file input
-                document.getElementById('taskFile').value = '';
-            } else {
-                console.error('Upload failed:', data.error);
+    initializeElements() {
+        console.log('Initializing elements');
+        try {
+            // Form elements
+            this.form = document.getElementById('taskDetailForm');
+            if (!this.form) {
+                console.error('Task form not found');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+
+            this.editBtn = document.getElementById('editBtn');
+            this.saveBtn = document.getElementById('saveBtn');
+
+            this.modal = document.querySelector('[data-modal]');
+            this.modalContent = this.modal?.querySelector('.modal-content');
+            this.closeButtons = document.querySelectorAll('[data-close-modal]');
+            this.deleteButton = document.querySelector('.btn-delete');
+            this.confirmButton = document.querySelector('.confirm-delete');
+            this.taskId = this.deleteButton.dataset.taskId;
+            
+            // Form input fields
+            this.titleInput = document.getElementById('taskTitle');
+            this.descriptionInput = document.getElementById('taskDescription');
+            this.startDateInput = document.getElementById('startDate');
+            this.startTimeInput = document.getElementById('startTime');
+            this.endDateInput = document.getElementById('endDate');
+            this.endTimeInput = document.getElementById('endTime');
+            
+            // Progress elements
+            this.progressBar = document.getElementById('taskProgress');
+            this.progressValue = document.querySelector('.progress-value');
+            
+            // Comments elements
+            this.commentsList = document.getElementById('commentsList');
+            this.newCommentInput = document.getElementById('newComment');
+            this.addCommentBtn = document.getElementById('addCommentBtn');
+
+            // Verify critical elements
+            if (!this.editBtn || !this.saveBtn || !this.deleteButton) {
+                console.error('Critical buttons not found');
+                return;
+            }
+
+            this.formInputs = this.form.querySelectorAll('input, textarea, button.priority-btn, button.status-btn');
+            this.initialized = true;
+            console.log('Elements initialized successfully');
+        } catch (error) {
+            console.error('Error initializing elements:', error);
+        }
+    }
+
+    attachEventListeners() {
+        if (!this.initialized) {
+            console.error('Cannot attach event listeners - not initialized');
+            return;
+        }
+
+        console.log('Attaching event listeners');
+        
+        // Form control listeners
+        this.editBtn.addEventListener('click', () => this.enableEditing());
+        this.saveBtn.addEventListener('click', () => this.saveChanges());
+        
+        // Progress bar listener
+        if (this.progressBar) {
+            this.progressBar.addEventListener('input', () => this.updateProgressValue());
+        }
+        
+        // Comments listener
+        if (this.addCommentBtn) {
+            this.addCommentBtn.addEventListener('click', () => this.addComment());
+        }
+
+        // Priority buttons
+        document.querySelectorAll('.priority-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!btn.disabled) this.selectButton(btn, '.priority-btn');
+            });
         });
-    }
-
-    const deleteButton = document.getElementById('deleteButton');
-    const deleteModal = document.getElementById('deleteModal');
-    const confirmDelete = document.getElementById('confirmDelete');
-    const cancelDelete = document.getElementById('cancelDelete');
-
-    // Show modal
-    deleteButton.addEventListener('click', function() {
-        deleteModal.style.display = 'flex';
-    });
-
-    // Hide modal
-    cancelDelete.addEventListener('click', function() {
-        deleteModal.style.display = 'none';
-    });
-
-    // Handle delete confirmation
-    confirmDelete.addEventListener('click', function() {
-        fetch(`/api/task/${taskId}/delete/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                window.location.href = '/tasks/';
-            } else {
-                alert('Failed to delete task');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-
-    // Add this part for the status dropdown
-    const statusDropdown = document.getElementById('editStatus');
-    if (statusDropdown) {
-        statusDropdown.addEventListener('change', function() {
-            updateTaskStatus(this.value);
+        
+        // Status buttons
+        document.querySelectorAll('.status-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!btn.disabled) this.selectButton(btn, '.status-btn');
+            });
         });
+
+        if (this.deleteButton) {
+            this.deleteButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showDeleteModal();
+            });
+        }
+    
+        // Close buttons (X and Cancel)
+        this.closeButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hideDeleteModal();
+            });
+        });
+    
+        // Confirm delete
+        if (this.confirmButton) {
+            this.confirmButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.deleteTask();
+            });
+        }
+    
+        // Prevent modal from closing when clicking modal content
+        if (this.modalContent) {
+            this.modalContent.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
     }
 
-    // Category handling
-    const categorySelect = document.getElementById('taskCategory');
-    const newCategoryInput = document.getElementById('newCategoryInput');
-    const newCategoryField = document.getElementById('newCategory');
-    const addNewCategoryBtn = document.getElementById('addNewCategory');
-
-    // Handle category selection
-    categorySelect.addEventListener('change', function() {
-        if (this.value === 'add_new') {
-            newCategoryInput.style.display = 'flex';
-            newCategoryField.focus();
-        } else if (this.value) {
-            newCategoryInput.style.display = 'none';
-            updateTaskCategory(this.value);
+    async loadTaskDetails() {
+        const taskId = this.getTaskId();
+        console.log('Loading details for task ID:', taskId);
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/`);
+            if (!response.ok) throw new Error('Failed to fetch task details');
+            
+            const task = await response.json();
+            console.log('Fetched task details:', task); // Debug log
+            
+            // Get form elements
+            const titleInput = document.getElementById('taskTitle');
+            const descriptionInput = document.getElementById('taskDescription');
+            const startDateInput = document.getElementById('startDate');
+            const startTimeInput = document.getElementById('startTime');
+            const endDateInput = document.getElementById('endDate');
+            const endTimeInput = document.getElementById('endTime');
+            const progressBar = document.getElementById('taskProgress');
+            const progressValue = document.querySelector('.progress-value');
+    
+            // Populate basic fields
+            if (titleInput) titleInput.value = task.title || '';
+            if (descriptionInput) descriptionInput.value = task.description || '';
+            
+            // Format and set dates
+            if (startDateInput && task.start_date) {
+                startDateInput.value = task.start_date.split('T')[0];
+            }
+            
+            if (endDateInput && task.end_date) {
+                endDateInput.value = task.end_date.split('T')[0];
+            }
+            
+            // Set times
+            if (startTimeInput && task.start_time) {
+                startTimeInput.value = task.start_time;
+            }
+            
+            if (endTimeInput && task.end_time) {
+                endTimeInput.value = task.end_time;
+            }
+            
+            // Set priority
+            const priorityBtn = document.querySelector(`.priority-btn[data-value="${task.priority}"]`);
+            if (priorityBtn) {
+                this.selectButton(priorityBtn, '.priority-btn');
+            }
+            
+            // Set status
+            const statusBtn = document.querySelector(`.status-btn[data-value="${task.status}"]`);
+            if (statusBtn) {
+                this.selectButton(statusBtn, '.status-btn');
+            }
+            
+            // Set progress
+            if (progressBar && progressValue) {
+                progressBar.value = task.task_progress || 0;
+                progressValue.textContent = `${task.task_progress || 0}%`;
+            }
+            
+            // Disable all fields initially
+            this.disableEditing();
+            
+        } catch (error) {
+            console.error('Error loading task details:', error);
+            this.showNotification('Error loading task details', 'error');
         }
-    });
+    }
 
-    // Handle new category addition
-    addNewCategoryBtn.addEventListener('click', function() {
-        const newCategory = newCategoryField.value.trim();
-        if (newCategory) {
-            fetch('/api/tasks/categories/create/', {
+    populateTaskForm(task) {
+        this.form.title.value = task.title;
+        this.form.description.value = task.description;
+        this.form.start_date.value = task.start_date;
+        this.form.start_time.value = task.start_time;
+        this.form.end_date.value = task.end_date;
+        this.form.end_time.value = task.end_time;
+        
+        this.progressBar.value = task.task_progress;
+        this.progressValue.textContent = `${task.task_progress}%`;
+        
+        this.selectButton(
+            document.querySelector(`.priority-btn.${task.priority}`), 
+            '.priority-btn'
+        );
+        
+        this.selectButton(
+            document.querySelector(`.status-btn.${task.status}`), 
+            '.status-btn'
+        );
+    }
+
+    async loadComments() {
+        const taskId = this.getTaskId();
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/comments/`);
+            const comments = await response.json();
+            this.renderComments(comments);
+        } catch (error) {
+            this.handleError(error, 'Error loading comments');
+        }
+    }
+
+    renderComments(comments) {
+        this.commentsList.innerHTML = comments.map(comment => `
+            <div class="comment-item">
+                <div class="comment-header">
+                    <span class="comment-author">${comment.author}</span>
+                    <span class="comment-date">${this.formatDate(comment.created_at)}</span>
+                </div>
+                <div class="comment-text">${comment.text}</div>
+            </div>
+        `).join('');
+    }
+
+    async addComment() {
+        const commentText = this.newCommentInput.value.trim();
+        if (!commentText) return;
+        
+        const taskId = this.getTaskId();
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/comments/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': this.getCsrfToken()
                 },
-                body: JSON.stringify({
-                    name: newCategory
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // Add new option to dropdown
-                    const option = new Option(newCategory, data.category.id);
-                    categorySelect.add(option);
-
-                    // Select the new category
-                    categorySelect.value = data.category.id;
-
-                    // Update task with new category
-                    updateTaskCategory(data.category.id);
-
-                    // Hide input and clear field
-                    newCategoryInput.style.display = 'none';
-                    newCategoryField.value = '';
-                } else {
-                    alert('Failed to create category: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to create category');
+                body: JSON.stringify({ text: commentText })
             });
-        }
-    });
 
-    // Load categories from backend
-    function loadCategories() {
-        fetch('/api/tasks/categories/')
-            .then(response => response.json())
-            .then(data => {
-                populateCategories(data.categories);
-
-                // Get the task's current category from the select element's data
-                const currentCategoryId = categorySelect.getAttribute('data-current-category');
-                if (currentCategoryId) {
-                    categorySelect.value = currentCategoryId;
-                }
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    function populateCategories(categories) {
-        const currentValue = categorySelect.value;
-
-        categorySelect.innerHTML = `
-            <option value="">Select Category</option>
-            <option value="add_new">+ Add Category</option>
-        `;
-
-        categories.forEach(category => {
-            const option = new Option(category.name, category.id);
-            if (category.id === currentValue) {
-                option.selected = true;
+            if (response.ok) {
+                this.newCommentInput.value = '';
+                await this.loadComments();
+                this.showNotification('Comment added successfully', 'success');
             }
-            categorySelect.add(option);
-        });
+        } catch (error) {
+            this.handleError(error, 'Error adding comment');
+        }
     }
 
-    function updateTaskCategory(categoryId) {
-        const taskId = window.location.pathname.split('/')[2];
-        fetch(`/api/task/${taskId}/update/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({
-                category_id: categoryId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Update the select element's data attribute
-                categorySelect.setAttribute('data-current-category', categoryId);
-                console.log('Category updated successfully');
+    enableEditing() {
+        this.isEditing = true;
+        this.formInputs.forEach(input => input.disabled = false);
+        this.editBtn.disabled = true;
+        this.saveBtn.disabled = false;
+    }
+
+    async saveChanges() {
+        const taskId = this.getTaskId();
+        if (!taskId) {
+            this.showNotification('Error: Task ID not found', 'error');
+            return;
+        }
+    
+        const taskData = this.getFormData();
+    
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCsrfToken()
+                },
+                body: JSON.stringify(taskData)
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const result = await response.json();
+            if (result.status === 'success') {
+                this.disableEditing();
+                await this.loadTaskDetails();
+                this.showNotification(`Task "${taskData.title}" has been updated`, 'success');
             } else {
-                alert('Failed to update category');
-                loadCategories(); // Reload categories on failure
+                throw new Error(result.error || 'Failed to update task');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            loadCategories(); // Reload categories on error
-        });
-    }
-
-    // Initialize categories on page load
-    loadCategories();
-
-     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+        } catch (error) {
+            console.error('Error saving task:', error);
+            this.showNotification(error.message || 'Error saving task', 'error');
         }
-        return cookieValue;
     }
 
-    function initializeLogout() {
-        const logoutLink = document.querySelector('a[href*="logout"]');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                try {
-                    const response = await fetch('/api/logout/', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        }
-                    });
-                    if (response.ok) {
-                        window.location.href = '/';
-                    }
-                } catch (error) {
-                    console.error('Logout error:', error);
+    // Utility Methods
+    getTaskId() {
+        // Get the path from URL and split it
+        const path = window.location.pathname;
+        // Assuming URL format is '/task/{id}/'
+        const matches = path.match(/\/task\/(\d+)/);
+        if (matches && matches[1]) {
+            return matches[1];
+        }
+        console.error('Could not extract task ID from path:', path);
+        return null;
+    }
+
+    getFormData() {
+        const form = document.getElementById('taskDetailForm');
+        const selectedPriority = document.querySelector('.priority-btn.selected');
+        const selectedStatus = document.querySelector('.status-btn.selected');
+        
+        return {
+            title: document.getElementById('taskTitle')?.value,
+            description: document.getElementById('taskDescription')?.value,
+            start_date: document.getElementById('startDate')?.value,
+            start_time: document.getElementById('startTime')?.value,
+            end_date: document.getElementById('endDate')?.value,
+            end_time: document.getElementById('endTime')?.value,
+            priority: selectedPriority?.getAttribute('data-value'),
+            status: selectedStatus?.getAttribute('data-value'),
+            task_progress: document.getElementById('taskProgress')?.value || 0
+        };
+    }
+
+    showDeleteModal() {
+        if (this.modal) {
+            this.modal.classList.add('show');
+        }
+    }
+    
+    hideDeleteModal() {
+        if (this.modal) {
+            this.modal.classList.remove('show');
+        }
+    }
+    async deleteTask() {
+        try {
+            const taskTitle = document.getElementById('taskTitle')?.value || 'Task';
+            
+            // Changed the endpoint to match your existing view
+            const response = await fetch(`/api/tasks/${this.taskId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': this.getCsrfToken()
                 }
             });
+    
+            if (response.ok) {
+                this.hideDeleteModal();
+                this.showNotification(`Task "${taskTitle}" has been deleted`, 'success');
+                setTimeout(() => {
+                    window.location.href = '/tasks/';
+                }, 1000);
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete task');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Failed to delete task', 'error');
+            this.hideDeleteModal();
         }
     }
 
-    initializeLogout();
+    selectButton(selectedBtn, selector) {
+        document.querySelectorAll(selector).forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        selectedBtn?.classList.add('selected');
+    }
+
+    updateProgressValue() {
+        this.progressValue.textContent = `${this.progressBar.value}%`;
+    }
+
+    disableEditing() {
+        this.isEditing = false;
+        this.formInputs.forEach(input => input.disabled = true);
+        this.editBtn.disabled = false;
+        this.saveBtn.disabled = true;
+    }
+
+    formatDate(dateString) {
+        const options = { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        };
+        return new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    handleError(error, message = 'An error occurred') {
+        console.error(`${message}:`, error);
+        this.showNotification(message, 'error');
+    }
+
+    async showNotification(message, type = 'success') {
+        // Create toast notification
+        const notificationContainer = document.querySelector('.toast-container') || (() => {
+            const container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        })();
+    
+        const notification = document.createElement('div');
+        notification.className = `toast ${type}`;
+        
+        const iconSVG = type === 'success' 
+            ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+            : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        
+        notification.innerHTML = `
+            <div class="toast-icon">${iconSVG}</div>
+            <div class="toast-message">${message}</div>
+            <div class="toast-close">×</div>
+        `;
+        
+        notificationContainer.appendChild(notification);
+    
+        // Add click handler for close button
+        const closeBtn = notification.querySelector('.toast-close');
+        closeBtn.onclick = () => {
+            notification.style.animation = 'slideOut 0.5s ease-out forwards';
+            setTimeout(() => notification.remove(), 500);
+        };
+    
+        // Auto remove toast after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOut 0.5s ease-out forwards';
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 500);
+            }
+        }, 3000);
+    
+        // If it's a success notification, add it to the notification panel
+        if (type === 'success') {
+            // Get the task title for context
+            const taskTitle = document.getElementById('taskTitle')?.value || 'task';
+            
+            // Create different notification messages based on the action
+            let notificationMessage;
+            if (message.includes('created')) {
+                notificationMessage = `Task "${taskTitle}" was created successfully`;
+            } else if (message.includes('updated')) {
+                notificationMessage = `Task "${taskTitle}" was updated successfully`;
+            } else if (message.includes('deleted')) {
+                notificationMessage = `Task "${taskTitle}" was deleted successfully`;
+            } else if (message.includes('Comment')) {
+                notificationMessage = `New comment added to task "${taskTitle}"`;
+            } else {
+                notificationMessage = message; // Use original message if no specific case matches
+            }
+    
+            // Add to notification panel
+            if (window.notificationManager) {
+                await window.notificationManager.addNotification(notificationMessage, this.getTaskId());
+            }
+        }
+    }
+
+    getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    }
+}
+
+// Initialize TaskDetailManager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.taskDetailManager = new TaskDetailManager();
 });

@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import json
 import logging
+from datetime import datetime
 from ..services.news_service import NewsService
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 news_service = NewsService()
@@ -13,18 +15,24 @@ def help_center_view(request):
     profile_type = request.user.profile_type
     articles = news_service.fetch_medium_articles(profile_type)
     
+    # Debug logging - make sure articles are dictionaries
     print(f"Number of articles: {len(articles)}")
     for article in articles:
-        print(f"Article: {article['title']}")
-        print(f"URL: {article['url']}")
-        print(f"Date: {article['published_date']}")
+        if isinstance(article, dict):
+            print(f"Article: {article.get('title', 'No title')}")
+            print(f"URL: {article.get('url', 'No URL')}")
+            print(f"Date: {article.get('published_date', 'No date')}")
+        else:
+            print(f"Invalid article format: {type(article)}: {article}")
         print("---")
     
     context = {
         'learning_paths': get_learning_paths(profile_type),
         'articles': articles,
         'tools': get_tools_and_resources(profile_type),
-        'user': request.user
+        'user': request.user,
+        'email_verified': request.user.email_verified,
+        'mobile_verified': request.user.mobile_verified
     }
     
     return render(request, 'task_management/dashboard/help_center.html', context)
@@ -272,3 +280,40 @@ def track_help_center_analytics(request):
     except Exception as e:
         logger.error(f"Error tracking analytics: {e}")
         return JsonResponse({'error': 'Internal server error'}, status=500)
+    
+@login_required
+def get_article_pools(request):
+    """API endpoint to get article pools for the current user"""
+    profile_type = request.user.profile_type
+    news_service = NewsService()
+    
+    # Get cached data which includes both selected articles and pools
+    cache_key = f'daily_articles_{profile_type}_{datetime.now().date()}'
+    cached_data = cache.get(cache_key)
+    
+    if cached_data:
+        return JsonResponse(json.loads(cached_data))
+    
+    # If no cached data, return empty pools
+    return JsonResponse({'pools': {}, 'selected': []})
+
+@login_required
+def debug_article_pools(request):
+    """Debug endpoint to check article pools status"""
+    profile_type = request.user.profile_type
+    cache_key = f'daily_articles_{profile_type}_{datetime.now().date()}'
+    cached_data = cache.get(cache_key)
+    
+    if cached_data:
+        data = json.loads(cached_data)
+        pools_summary = {
+            'total_categories': len(data['pools']),
+            'pools': {
+                category: len(articles) 
+                for category, articles in data['pools'].items()
+            },
+            'selected_articles': len(data['selected'])
+        }
+        return JsonResponse(pools_summary)
+    
+    return JsonResponse({'error': 'No cached pools found'})

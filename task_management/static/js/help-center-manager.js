@@ -3,6 +3,9 @@ class HelpCenterManager {
         this.initializeElements();
         this.attachEventListeners();
         this.initializeSearch();
+        this.articlePools = new Map();
+        this.currentPositions = new Map();
+        this.isAnimating = false;
     }
 
     initializeElements() {
@@ -20,6 +23,10 @@ class HelpCenterManager {
 
         // Progress elements
         this.progressBars = document.querySelectorAll('.progress-bar');
+
+        this.nextButtons = document.querySelectorAll('.next-article-btn');
+        this.initializeArticlePools();
+        this.initializeClapsTooltips();
     }
 
     attachEventListeners() {
@@ -37,26 +44,51 @@ class HelpCenterManager {
         document.querySelectorAll('.tool-download').forEach(link => {
             link.addEventListener('click', (e) => this.trackToolDownload(e));
         });
+
+        // Next Article Button
+        this.nextButtons.forEach(button => {
+            button.disabled = true;  // Disable initially
+            button.addEventListener('click', (e) => {
+                if (!this.isAnimating && this.articlePools.size > 0) {
+                    this.handleNextArticle(e);
+                }
+            });
+        });
+
+        fetch('/api/help-center/get-article-pools/')
+        .then(response => response.json())
+        .then(() => {
+            this.nextButtons.forEach(button => {
+                button.disabled = false;
+            });
+        });
     }
 
     initializeSearch() {
-        // Initialize search index
+        // Initialize search index with null checks
         this.searchIndex = {
-            articles: Array.from(this.articles).map(article => ({
-                element: article,
-                title: article.querySelector('h3').textContent.toLowerCase(),
-                description: article.querySelector('p').textContent.toLowerCase(),
-                category: article.querySelector('.article-category').textContent.toLowerCase()
-            })),
+            articles: Array.from(this.articles).map(article => {
+                const title = article.querySelector('h3')?.textContent || '';
+                const description = article.querySelector('p')?.textContent || '';
+                const category = article.querySelector('.article-category')?.textContent || '';
+                
+                return {
+                    element: article,
+                    title: title.toLowerCase(),
+                    description: description.toLowerCase(),
+                    category: category.toLowerCase()
+                };
+            }),
+            // Similar pattern for other elements
             learningPaths: Array.from(this.learningPaths).map(path => ({
                 element: path,
-                title: path.querySelector('h3').textContent.toLowerCase(),
-                description: path.querySelector('p').textContent.toLowerCase()
+                title: path.querySelector('h3')?.textContent || '',
+                description: path.querySelector('p')?.textContent || ''
             })),
             tools: Array.from(this.tools).map(tool => ({
                 element: tool,
-                title: tool.querySelector('h3').textContent.toLowerCase(),
-                description: tool.querySelector('p').textContent.toLowerCase()
+                title: tool.querySelector('h3')?.textContent || '',
+                description: tool.querySelector('p')?.textContent || ''
             }))
         };
     }
@@ -91,7 +123,6 @@ class HelpCenterManager {
     }
 
     updateSectionsVisibility() {
-        // Hide section headers if no visible items
         ['learning-paths-section', 'articles-section', 'tools-section'].forEach(sectionClass => {
             const section = document.querySelector(`.${sectionClass}`);
             const visibleItems = section.querySelectorAll('[style="display: block"]').length;
@@ -99,11 +130,166 @@ class HelpCenterManager {
         });
     }
 
+    initializeArticlePools() {
+        console.log('Initializing article pools...');
+        this.articlePools = new Map();  // Ensure Map is initialized
+        this.currentPositions = new Map();  // Ensure Map is initialized
+        
+        fetch('/api/help-center/get-article-pools/')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received pools data:', data);
+                if (data && data.pools) {
+                    Object.entries(data.pools).forEach(([category, articles]) => {
+                        if (articles && Array.isArray(articles)) {
+                            console.log(`Setting up pool for category: '${category}' with ${articles.length} articles`);
+                            this.articlePools.set(category, articles);
+                            this.currentPositions.set(category, 0);
+                        }
+                    });
+                    console.log('Available categories after setup:', Array.from(this.articlePools.keys()));
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching article pools:', error);
+            });
+    }
+
+    handleNextArticle(event) {
+        const button = event.currentTarget;
+        const articleCard = button.closest('.article-card');
+        const cardContainer = articleCard.parentElement;
+        const category = articleCard.querySelector('.article-category').textContent.trim().toLowerCase();
+        const isRightPanel = cardContainer.nextElementSibling !== null;
+
+         // Debug logs
+        console.log('Button clicked:', {
+            button,
+            articleCard,
+            cardContainer,
+            category,
+            isRightPanel,
+            pools: this.articlePools,
+            hasCategory: this.articlePools.has(category),
+            availableCategories: Array.from(this.articlePools.keys())
+        });
+
+        const matchingCategory = Array.from(this.articlePools.keys()).find(
+            key => key.toLowerCase() === category
+        );
+    
+        if (!this.articlePools || !matchingCategory) {
+            console.error('Article pools not yet loaded or category not found:', category);
+            console.log('Available categories:', Array.from(this.articlePools.keys()));
+            return;
+        }
+
+        if (!this.articlePools || !this.articlePools.has(category)) {
+            console.error('Article pools not yet loaded or category not found:', category);
+            return;
+        }
+    
+        if (this.isAnimating) {
+            console.log('Animation in progress, skipping');
+            return;
+        }
+    
+        this.isAnimating = true;
+        button.disabled = true;
+    
+        const pool = this.articlePools.get(matchingCategory);
+        if (!pool || !pool.length) {
+            console.error('No articles in pool for category:', matchingCategory);
+            this.isAnimating = false;
+            button.disabled = false;
+            return;
+        }
+    
+        let currentPos = this.currentPositions.get(category) || 0;
+        currentPos = (currentPos + 1) % pool.length;
+        this.currentPositions.set(category, currentPos);
+        const nextArticle = pool[currentPos];
+    
+        // Create a clone of the current article card for animation
+        const clone = articleCard.cloneNode(true);
+        cardContainer.appendChild(clone);
+    
+        // Position the clone
+        clone.style.position = 'absolute';
+        clone.style.top = '0';
+        clone.style.left = '0';
+        clone.style.width = '100%';
+        clone.style.zIndex = '1';
+    
+        // Prepare the original card with new content but hidden
+        articleCard.querySelector('h3').textContent = nextArticle.title;
+        articleCard.querySelector('.article-highlight').textContent = nextArticle.highlight;
+        articleCard.querySelector('.article-link').href = nextArticle.url;
+        
+        // Update claps display
+        const formattedClaps = this.formatClapsCount(nextArticle.claps_count);
+        const clapsIcon = articleCard.querySelector('.clap-icon');
+        const tooltip = articleCard.querySelector('.claps-tooltip');
+        if (clapsIcon && tooltip) {
+            clapsIcon.dataset.claps = nextArticle.claps_count;
+            tooltip.textContent = `${formattedClaps} claps`;
+        }
+        
+        articleCard.querySelector('.article-date').textContent = nextArticle.published_date;
+        
+        // Animate the clone out
+        const slideOutAnimation = clone.animate([
+            { transform: 'translateX(0)', opacity: 1 },
+            { transform: `translateX(${isRightPanel ? '' : '-'}100%)`, opacity: 0 }
+        ], {
+            duration: 300,
+            easing: 'ease-out'
+        });
+    
+        // Animate the original card in
+        const slideInAnimation = articleCard.animate([
+            { transform: `translateX(${isRightPanel ? '-' : ''}100%)`, opacity: 0 },
+            { transform: 'translateX(0)', opacity: 1 }
+        ], {
+            duration: 300,
+            easing: 'ease-out'
+        });
+    
+        slideOutAnimation.onfinish = () => {
+            clone.remove();
+            button.disabled = false;
+            this.isAnimating = false;
+        };
+    }
+
+    formatClapsCount(count) {
+        count = parseInt(count) || 0;
+        if (count >= 1000000) {
+            return `${(count / 1000000).toFixed(1)}M`;
+        } else if (count >= 1000) {
+            return `${(count / 1000).toFixed(1)}K`;
+        }
+        return count.toString();
+    }
+
+    initializeClapsTooltips() {
+        document.querySelectorAll('.claps-container').forEach(container => {
+            const clapsIcon = container.querySelector('.clap-icon');
+            if (clapsIcon) {
+                const clapsCount = parseInt(clapsIcon.dataset.claps) || 0;
+                const formattedCount = this.formatClapsCount(clapsCount);
+                const tooltip = container.querySelector('.claps-tooltip');
+                if (tooltip) {
+                    tooltip.textContent = `${formattedCount} claps`;
+                }
+            }
+        });
+    }
+
     trackArticleClick(event) {
         const article = event.target.closest('.article-card');
         const articleTitle = article.querySelector('h3').textContent;
         
-        // Send tracking data to backend
         this.sendAnalytics('article_click', {
             title: articleTitle,
             timestamp: new Date().toISOString()
@@ -114,7 +300,6 @@ class HelpCenterManager {
         const tool = event.target.closest('.tool-card');
         const toolTitle = tool.querySelector('h3').textContent;
         
-        // Send tracking data to backend
         this.sendAnalytics('tool_download', {
             title: toolTitle,
             timestamp: new Date().toISOString()
@@ -122,7 +307,6 @@ class HelpCenterManager {
     }
 
     sendAnalytics(action, data) {
-        // Send analytics data to your backend
         fetch('/api/help-center/analytics', {
             method: 'POST',
             headers: {
@@ -137,13 +321,11 @@ class HelpCenterManager {
     }
 
     getCsrfToken() {
-        // Get CSRF token from cookies
         return document.cookie.split('; ')
             .find(row => row.startsWith('csrftoken='))
             ?.split('=')[1];
     }
 
-    // Helper method to animate progress bars
     animateProgressBars() {
         this.progressBars.forEach(bar => {
             const targetWidth = bar.getAttribute('aria-valuenow');
@@ -159,17 +341,14 @@ class HelpCenterManager {
         });
     }
 
-    // Method to show notification
     showNotification(message, type = 'success') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
         document.body.appendChild(notification);
 
-        // Trigger animation
         requestAnimationFrame(() => notification.classList.add('show'));
 
-        // Remove notification after delay
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
@@ -177,7 +356,6 @@ class HelpCenterManager {
     }
 }
 
-// Initialize Help Center
 document.addEventListener('DOMContentLoaded', () => {
-    window.helpCenter = new HelpCenterManager();
+    new HelpCenterManager();
 });

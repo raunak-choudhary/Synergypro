@@ -21,10 +21,10 @@ class DailyArticleSelection(models.Model):
     date = models.DateField(default=date.today)
     title = models.CharField(max_length=255)
     url = models.URLField()
-    source = models.CharField(max_length=100)
     published_date = models.CharField(max_length=50)
     category = models.CharField(max_length=50)
     highlight = models.TextField(null=True, blank=True)
+    claps_count = models.IntegerField(default=0)  # Added this field
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:

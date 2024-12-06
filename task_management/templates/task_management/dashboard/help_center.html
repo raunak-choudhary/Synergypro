@@ -33,7 +33,7 @@
                     <span class="nav-icon">📅</span>
                     Calendar
                 </a>
-                <a href="#" class="nav-item">
+                <a href="{% url 'settings' %}" class="nav-item">
                     <span class="nav-icon">⚙️</span>
                     Settings
                 </a>
@@ -93,19 +93,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="user-profile" id="profileDropdown">
-                        {% if user.profile_image %}
-                            <img src="{{ user.profile_image.url }}?v={{ user.updated_at|date:'U' }}" class="avatar-img">
-                        {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=4B1B7F&color=fff" class="avatar-img">
-                        {% endif %}
+                    <div id="profileDropdown" class="user-profile" 
+                        data-email-verified="{{ email_verified|lower }}" 
+                        data-mobile-verified="{{ mobile_verified|lower }}">
+                        <div class="avatar-wrapper">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="avatar-img" alt="Profile Image">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=4B1B7F&color=fff" class="avatar-img" alt="Profile Image">
+                            {% endif %}
+                            <div class="verification-ring"></div>
+                            <div class="verification-warning" style="display: none;">!</div>
+                        </div>
+                        
                         <div class="profile-dropdown-menu">
-                            <a href="{% url 'profile' %}" class="dropdown-item">
-                                <span class="icon">👤</span> Profile
-                            </a>
-                            <a href="{% url 'logout' %}" class="dropdown-item">
-                                <span class="icon">🚪</span> Logout
-                            </a>
+                            <a href="{% url 'profile' %}" class="dropdown-item"><span class="icon">👤</span> Profile</a>
+                            <a href="{% url 'logout' %}" class="dropdown-item"><span class="icon">🚪</span> Logout</a>
                         </div>
                     </div>
                 </div>   
@@ -157,12 +160,21 @@
                                     
                                     <div class="article-footer">
                                         <div class="article-meta">
-                                            <div class="source-date">
-                                                <span class="article-source">{{ article.source }}</span>
-                                                {% if article.published_date %}
-                                                    <span class="article-date">{{ article.published_date }}</span>
-                                                {% endif %}
+                                            <div class="claps-container">
+                                                <span class="clap-icon" data-claps="{{ article.claps_count }}">👏</span>
+                                                <div class="claps-tooltip">
+                                                    <span class="claps-count">{{ article.claps_count }} claps</span>
+                                                </div>
                                             </div>
+                                            
+                                            <button class="next-article-btn" data-article-id="{{ article.url }}" data-category="{{ article.category }}">
+                                                <span class="btn-text">Next Article</span>
+                                                <span class="refresh-icon">⟳</span>
+                                            </button>
+                                            
+                                            {% if article.published_date %}
+                                                <span class="article-date">{{ article.published_date }}</span>
+                                            {% endif %}
                                         </div>
                                         
                                         <a href="{{ article.url }}" class="article-link" target="_blank" rel="noopener">

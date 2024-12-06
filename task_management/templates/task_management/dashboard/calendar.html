@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynergyPro - Calendar</title>
+    <title>Calendar - SynergyPro</title>
     <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
@@ -32,7 +32,7 @@
                     <span class="nav-icon">📅</span>
                     Calendar
                 </a>
-                <a href="#" class="nav-item">
+                <a href="{% url 'settings' %}" class="nav-item">
                     <span class="nav-icon">⚙️</span>Settings
                 </a>
             </div>
@@ -102,19 +102,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="user-profile" id="profileDropdown">
-                        {% if user.profile_image %}
-                            <img src="{{ user.profile_image.url }}" class="avatar-img">
-                        {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=4B1B7F&color=fff" class="avatar-img">
-                        {% endif %}
+                    <div id="profileDropdown" class="user-profile" data-email-verified="{{ email_verified|lower }}" data-mobile-verified="{{ mobile_verified|lower }}">
+                        <div class="avatar-wrapper">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="avatar-img" alt="Profile Image">
+                            {% else %}
+                                <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=4B1B7F&color=fff" class="avatar-img" alt="Profile Image">
+                            {% endif %}
+                            <div class="verification-ring"></div>
+                            <div class="verification-warning" style="display: none;">!</div>
+                        </div>
                         <div class="profile-dropdown-menu">
-                            <a href="{% url 'profile' %}" class="dropdown-item">
-                                <span class="icon">👤</span> Profile
-                            </a>
-                            <a href="{% url 'logout' %}" class="dropdown-item">
-                                <span class="icon">🚪</span> Logout
-                            </a>
+                            <a href="{% url 'profile' %}" class="dropdown-item"><span class="icon">👤</span> Profile</a>
+                            <a href="{% url 'logout' %}" class="dropdown-item"><span class="icon">🚪</span> Logout</a>
                         </div>
                     </div>
                 </div>
@@ -150,47 +150,70 @@
 
     <div id="taskModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Create Task</h2>
+            <div class="modal-header">
+                <h2>Create New Task</h2>
+                <span class="close">&times;</span>
+            </div>
             <form id="taskForm">
+                {% csrf_token %}
                 <div class="form-group">
                     <label for="taskTitle">Task Title</label>
-                    <input type="text" id="taskTitle" name="title" required>
+                    <input type="text" id="taskTitle" name="taskTitle" required>
                 </div>
-
-                <div class="form-group">
-                    <label>Start Date & Time</label>
-                    <div class="datetime-inputs">
-                        <input type="date" id="taskStartDate" name="start_date" required>
-                        <input type="time" id="taskStartTime" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>End Date & Time</label>
-                    <div class="datetime-inputs">
-                        <input type="date" id="taskEndDate" required>
-                        <input type="time" id="taskEndTime" required>
-                    </div>
-                </div>
-
+                
                 <div class="form-group">
                     <label for="taskDescription">Description</label>
-                    <textarea id="taskDescription"></textarea>
+                    <textarea id="taskDescription" name="taskDescription" rows="3"></textarea>
                 </div>
-
-<!--                <div class="modal-actions">-->
-<!--                    <button type="submit" class="save-btn">Create Task</button>-->
-<!--                    <button type="button" class="cancel-btn">Cancel</button>-->
-<!--                </div>-->
-                <button type="submit">Create Task</button>
+    
+                <div class="priority-group">
+                    <label>Priority Level</label>
+                    <div class="priority-buttons">
+                        <input type="radio" id="lowPriority" name="priority" value="low">
+                        <label for="lowPriority" class="priority-btn low">Low</label>
+                        
+                        <input type="radio" id="mediumPriority" name="priority" value="medium" checked>
+                        <label for="mediumPriority" class="priority-btn medium">Medium</label>
+                        
+                        <input type="radio" id="highPriority" name="priority" value="high">
+                        <label for="highPriority" class="priority-btn high">High</label>
+                    </div>
+                </div>
+    
+                <div class="datetime-group">
+                    <div class="form-group">
+                        <label for="taskStartDate">Start Date</label>
+                        <input type="date" id="taskStartDate" name="taskStartDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="taskStartTime">Start Time</label>
+                        <input type="time" id="taskStartTime" name="taskStartTime" value="00:00">
+                    </div>
+                </div>
+                
+                <div class="datetime-group">
+                    <div class="form-group">
+                        <label for="taskEndDate">End Date</label>
+                        <input type="date" id="taskEndDate" name="taskEndDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskEndTime">End Time</label>
+                        <input type="time" id="taskEndTime" name="taskEndTime" value="00:00">
+                    </div>
+                </div>
+    
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="submit-btn">Create Task</button>
+                </div>
             </form>
         </div>
     </div>
 
     <!-- Scripts -->
     {% csrf_token %}
-    <script src="{% static 'js/notifications.js' %}"></script>  
+    <script src="{% static 'js/notifications.js' %}"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>  
     <script src="{% static 'js/calendar-manager.js' %}"></script>
 </body>
 </html>

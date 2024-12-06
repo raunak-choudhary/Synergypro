@@ -4,6 +4,7 @@ class DashboardManager {
         this.attachEventListeners();
         //this.initializeFocusTimer();
         this.updateTaskProgress();
+        this.initializeVerificationStatus();
     }
 
     initializeElements() {
@@ -252,6 +253,30 @@ class DashboardManager {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    initializeVerificationStatus() {
+        // Get verification status from user data
+        // You'll need to pass this data from Django to your template
+        const emailVerified = document.querySelector('.user-profile').dataset.emailVerified === 'true';
+        const mobileVerified = document.querySelector('.user-profile').dataset.mobileVerified === 'true';
+        
+        this.updateVerificationStatus(emailVerified, mobileVerified);
+    }
+
+    updateVerificationStatus(emailVerified, mobileVerified) {
+        const verificationRing = document.querySelector('.verification-ring');
+        const verificationWarning = document.querySelector('.verification-warning');
+        
+        if (emailVerified && mobileVerified) {
+            verificationRing.classList.add('verified');
+            verificationRing.classList.remove('not-verified');
+            verificationWarning.style.display = 'none';
+        } else {
+            verificationRing.classList.add('not-verified');
+            verificationRing.classList.remove('verified');
+            verificationWarning.style.display = 'flex';
+        }
     }
 }
 
