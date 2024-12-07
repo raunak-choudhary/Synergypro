@@ -44,10 +44,12 @@ urlpatterns = [
         path('api/tasks/<int:task_id>/comments/', task_views.task_comments_api, name='task_comments_api'),
         path('api/task/<int:task_id>/delete/', task_views.delete_task, name='delete_task'),
 
-        # File Upload URLs
-        path('api/tasks/<int:task_id>/files/', task_views.task_files_api, name='task_files_api'),
-        path('api/tasks/<int:task_id>/files/<int:file_id>/', task_views.task_file_detail_api, name='task_file_detail_api'),
+        # File Upload and View URLs
         path('api/tasks/<int:task_id>/files/upload/', task_views.upload_task_file, name='upload_task_file'),
+        path('api/tasks/<int:task_id>/files/', task_views.task_files_api, name='task_files_api'),
+        path('task/<int:task_id>/files/view/', task_views.task_file_view, name='task_file_view'),
+        path('api/tasks/<int:task_id>/files/<str:file_id>/view/', task_views.view_task_file, name='view_task_file'),
+        path('api/tasks/<int:task_id>/files/<str:file_id>/delete/', task_views.delete_task_file, name='delete_task_file'),
 
         #Task Categories URLs
         path('api/categories/', task_views.categories_api, name='categories_api'),

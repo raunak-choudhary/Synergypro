@@ -269,7 +269,25 @@ class TaskDetailManager {
 
         this.selectedFileDiv.style.display = 'block';
         this.selectedFileDiv.textContent = file.name;
-    }    
+    }
+    
+    async checkAndViewFiles() {
+        const taskId = this.getTaskId();
+        try {
+            const response = await fetch(`/api/tasks/${taskId}/`);
+            const task = await response.json();
+            
+            if (!task || task.file_count === 0) {
+                this.showNotification('No files present!!', 'error');
+                return;
+            }
+            
+            window.location.href = `/task/${taskId}/files/view/`;
+        } catch (error) {
+            console.error('Error checking files:', error);
+            this.showNotification('Error checking files', 'error');
+        }
+    }
 
     async loadTaskDetails() {
         const taskId = this.getTaskId();

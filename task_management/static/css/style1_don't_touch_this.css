@@ -1,71 +1,29 @@
-/* Category Styles */
-.title-category-row {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-}
-
-.title-section {
-    flex: 1;
-}
-
-.category-section {
-    flex: 1;
-}
-
-.category-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #2B2B40;
-    border-radius: 8px;
-    background: #151521;
-    color: #fff;
-    font-size: 1rem;
-    cursor: pointer;
-    outline: none;
-}
-
-.category-select option {
-    padding: 0.75rem;
+.file-list {
+    flex: 0 0 300px;
     background: #1E1E2D;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-left: auto;
+    max-width: 350px;
 }
 
-.category-select option:last-child {
-    color: #3699FF;
-    font-weight: 500;
-}
-
-.category-select:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-/* Category Modal Styles */
-#categoryModal .modal-content {
-    max-width: 400px;
-}
-
-#categoryModal input[type="text"] {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #2B2B40;
-    border-radius: 8px;
-    background: #151521;
-    color: #fff;
-    font-size: 1rem;
-}
-
-.confirm-create-category {
-    background: #3699FF;
-    border: none;
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border-radius: 8px;
+.file-item-name {
+    flex: 1;
     cursor: pointer;
-    transition: all 0.2s ease;
+    color: #fff;
+    margin-right: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
 }
 
-.confirm-create-category:hover {
-    background: #1f7fea;
-    transform: translateY(-1px);
+.document-viewer {
+    flex: 1;
+    min-width: 0;  /* Add this */
+    background: #1E1E2D;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }

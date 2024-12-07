@@ -8,6 +8,8 @@ import json
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 import os
+from django.http import HttpResponse
+from django.conf import settings
 
 @login_required
 def tasks_view(request):
@@ -55,6 +57,7 @@ def task_detail_api(request, task_id):
             'status': task.status,
             'priority': task.priority,
             'task_progress': task.task_progress,
+            'file_count': task.file_count,
         })
     
     elif request.method == 'PUT':
@@ -178,34 +181,6 @@ def upload_task_file(request, task_id):
         return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'error': 'Error uploading file'}, status=500)
-    
-@login_required
-def task_files_api(request, task_id):
-    task = get_object_or_404(Task, id=task_id, user=request.user)
-    
-    if request.method == 'GET':
-        files = TaskFile.objects.filter(task=task)
-        files_data = [{
-            'id': f.id,
-            'filename': f.original_filename,
-            'size': f.file_size,
-            'uploaded_at': f.uploaded_at.isoformat(),
-            'file_type': f.file_type
-        } for f in files]
-        return JsonResponse(files_data, safe=False)
-    
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-@login_required
-def task_file_detail_api(request, task_id, file_id):
-    task = get_object_or_404(Task, id=task_id, user=request.user)
-    task_file = get_object_or_404(TaskFile, id=file_id, task=task)
-    
-    if request.method == 'DELETE':
-        task_file.delete()
-        return JsonResponse({'status': 'success'})
-    
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @login_required
 def categories_api(request):
@@ -243,4 +218,106 @@ def create_category(request):
         return JsonResponse({'error': 'Category already exists'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+@login_required
+def task_file_view(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    if task.file_count == 0:
+        return JsonResponse({'error': 'No files present'}, status=404)
+    return render(request, 'task_management/dashboard/task_file_view.html', {'task': task})
+
+@login_required
+def task_files_api(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    user_id = request.user.id
+    
+    directory_path = os.path.join(settings.MEDIA_ROOT, 'task_files', str(user_id), str(task_id))
+    
+    print(f"Searching directory: {directory_path}")  # Debug log
+    
+    files_data = []
+    if os.path.exists(directory_path):
+        for filename in os.listdir(directory_path):
+            if filename.startswith('.'):
+                continue
+                
+            file_path = os.path.join(directory_path, filename)
+            if os.path.isfile(file_path):
+                file_size = os.path.getsize(file_path)
+                file_type = os.path.splitext(filename)[1]
+                
+                files_data.append({
+                    'id': filename,
+                    'filename': filename,
+                    'file_type': file_type,
+                    'file_path': file_path.replace('\\', '/'),
+                    'size': file_size
+                })
+    
+    return JsonResponse(files_data, safe=False)
+
+@login_required
+def view_task_file(request, task_id, file_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    user_id = request.user.id
+    
+    # Use absolute path with MEDIA_ROOT
+    file_path = os.path.join(settings.MEDIA_ROOT, 'task_files', 
+                            str(user_id), str(task_id), file_id)
+    
+    print(f"Looking for file at: {file_path}")  # Debug log
+    
+    if not os.path.exists(file_path):
+        print(f"File not found at: {file_path}")  # Debug log
+        return JsonResponse({'error': 'File not found'}, status=404)
+    
+    try:
+        file_type = os.path.splitext(file_id)[1].lower()
+        content_type = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            '.txt': 'text/plain'
+        }.get(file_type, 'application/octet-stream')
+        
+        with open(file_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type=content_type)
+            response['Content-Disposition'] = f'inline; filename="{file_id}"'
+            return response
+    except Exception as e:
+        print(f"Error serving file: {str(e)}")  # Debug log
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@login_required
+def delete_task_file(request, task_id, file_id):
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    user_id = request.user.id
+    
+    # Construct file path
+    file_path = os.path.join(settings.MEDIA_ROOT, 'task_files', 
+                            str(user_id), str(task_id), file_id)
+    
+    try:
+        if os.path.exists(file_path):
+            # Delete file from filesystem
+            os.remove(file_path)
+            
+            # Decrease file count
+            task.file_count = max(0, task.file_count - 1)
+            task.save()
+            
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'error': 'File not found'}, status=404)
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
     
