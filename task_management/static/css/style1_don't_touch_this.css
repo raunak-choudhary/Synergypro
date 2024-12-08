@@ -1,29 +1,27 @@
-.file-list {
-    flex: 0 0 300px;
-    background: #1E1E2D;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-left: auto;
-    max-width: 350px;
-}
-
-.file-item-name {
-    flex: 1;
-    cursor: pointer;
-    color: #fff;
-    margin-right: 1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 180px;
-}
-
-.document-viewer {
-    flex: 1;
-    min-width: 0;  /* Add this */
-    background: #1E1E2D;
-    border-radius: 12px;
-    overflow: hidden;
+.title-section {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.priority-label {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.category-label {
+    font-size: 0.875rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(54, 153, 255, 0.2);
+    color: #3699FF;
+}
+
+.category-label.none {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.5);
 }

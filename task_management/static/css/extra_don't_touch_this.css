@@ -1,180 +1,150 @@
-/* Add these styles at the end of your calendar.css file */
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
+/* Analytics Content Styles */
+.analytics-content {
+    padding: 2rem 3rem;
+    margin-top: 1rem;
 }
 
-.modal-content {
-    background: var(--card-bg);
-    margin: 5% auto;
-    width: 90%;
-    max-width: 500px;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h2 {
-    margin: 0;
+/* Main Section Title Styling */
+.main-section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
     color: var(--text-primary);
-    font-size: 1.25rem;
-}
-
-.close {
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.close:hover {
-    color: var(--text-primary);
-}
-
-#taskForm {
-    padding: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1.25rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.form-group input,
-.form-group textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-}
-
-.form-group input:focus,
-.form-group textarea:focus {
-    border-color: var(--bright-purple);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(155, 47, 147, 0.2);
-}
-
-.datetime-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-}
-
-.priority-group {
-    margin-bottom: 1.25rem;
-}
-
-.priority-buttons {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.priority-buttons input[type="radio"] {
-    display: none;
-}
-
-.priority-btn {
-    flex: 1;
-    padding: 0.5rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.2rem;
+    position: relative;
     text-align: center;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
 }
 
-.priority-btn.low {
-    border-color: rgba(46, 213, 115, 0.3);
+.main-section-title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 180px;
+    height: 4px;
+    background: linear-gradient(to right,
+        var(--rich-purple),
+        var(--bright-purple)
+    );
+    border-radius: 4px;
 }
 
-.priority-btn.medium {
-    border-color: rgba(255, 171, 0, 0.3);
+/* Subsection Title Styling */
+.subsection-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    position: relative;
+    text-align: left;
 }
 
-.priority-btn.high {
-    border-color: rgba(255, 71, 87, 0.3);
+.subsection-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right,
+        var(--rich-purple),
+        var(--bright-purple)
+    );
+    border-radius: 3px;
 }
 
-input[type="radio"]:checked + .priority-btn.low {
-    background: rgba(46, 213, 115, 0.2);
-    border-color: rgba(46, 213, 115, 0.5);
-    color: #2ed573;
+/* Section Spacing */
+.analytics-section {
+    margin-bottom: 4rem;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
 }
 
-input[type="radio"]:checked + .priority-btn.medium {
-    background: rgba(255, 171, 0, 0.2);
-    border-color: rgba(255, 171, 0, 0.5);
-    color: #ffab00;
+.analytics-section:last-child {
+    margin-bottom: 2rem;
 }
 
-input[type="radio"]:checked + .priority-btn.high {
-    background: rgba(255, 71, 87, 0.2);
-    border-color: rgba(255, 71, 87, 0.5);
-    color: #ff4757;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
+/* Charts Grid Layout */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
     margin-top: 2rem;
 }
 
-.modal-footer button {
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    border: none;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* Chart Card Styling */
+.chart-card {
+    background: rgba(26, 26, 46, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
-.cancel-btn {
+.chart-card:hover {
+    transform: translateY(-3px);
+    background: var(--card-bg-hover);
+}
+
+/* Chart Container */
+.chart-container {
+    height: 300px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 0.5rem;
+}
+
+/* Scrollbar Styling */
+.chart-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chart-container::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
+    border-radius: 4px;
 }
 
-.submit-btn {
-    background: linear-gradient(135deg, var(--rich-purple), var(--bright-purple));
-    color: white;
+.chart-container::-webkit-scrollbar-thumb {
+    background: var(--rich-purple);
+    border-radius: 4px;
 }
 
-.cancel-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+.chart-container::-webkit-scrollbar-thumb:hover {
+    background: var(--bright-purple);
 }
 
-.submit-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(155, 47, 147, 0.2);
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .analytics-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-section-title {
+        font-size: 2rem;
+    }
+
+    .subsection-title {
+        font-size: 1.25rem;
+    }
+
+    .analytics-section {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
 }

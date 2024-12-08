@@ -1,14 +1,15 @@
-{% load static %}
-
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tasks - SynergyPro</title>
+    <title>Analytics Dashboard - SynergyPro</title>
     <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/tasks.css' %}">
+    <link rel="stylesheet" href="{% static 'css/analytics.css' %}">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -24,7 +25,7 @@
                 <a href="{% url 'individual_student_dashboard' %}" class="nav-item">
                     <span class="nav-icon">📊</span>Overview
                 </a>
-                <a href="{% url 'tasks' %}" class="nav-item active">
+                <a href="{% url 'tasks' %}" class="nav-item">
                     <span class="nav-icon">📝</span>Tasks
                 </a>
                 <a href="{% url 'calendar' %}" class="nav-item">
@@ -32,6 +33,14 @@
                 </a>
                 <a href="{% url 'settings' %}" class="nav-item">
                     <span class="nav-icon">⚙️</span>Settings
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <span class="section-title">TOOLS</span>
+                <a href="{% url 'analytics' %}" class="nav-item active">
+                    <span class="nav-icon">📈</span>
+                    Analytics
                 </a>
             </div>
 
@@ -51,8 +60,8 @@
             <!-- Header -->
             <div class="dashboard-header">
                 <div class="welcome-message">
-                    <h1>Tasks</h1>
-                    <p>{{ user.first_name }}, your all tasks are published here!</p>
+                    <h1>Analytics Dashboard</h1>
+                    <p>{{ user.first_name }}, here's your productivity insights!</p>
                 </div>
 
                 <div class="header-right">
@@ -111,113 +120,89 @@
                 </div>
             </div>
 
-            <!-- Tasks Content -->
-            <div class="tasks-container">
-                <!-- In Progress Section -->
-                <div class="tasks-section">
+             <!-- Analytics Content -->
+             <main class="analytics-container">
+                <!-- Task Analytics Section -->
+                <section class="analytics-section">
                     <div class="section-header">
-                        <h2>In Progress</h2>
-                        <div class="task-count" id="inProgressCount">0 tasks</div>
+                        <h2>Task Analytics</h2>
                     </div>
-                    <div class="section-wrapper">
-                        <button class="scroll-arrow left-arrow in-progress-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6"/>
-                            </svg>
-                        </button>
-                        
-                        <div class="tasks-wrapper" id="in-progress-tasks">
-                            <!-- Tasks will be populated dynamically -->
+                    
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>Completion Rate</h3>
+                            <div class="chart-container">
+                                <canvas id="completionRateChart"></canvas>
+                            </div>
                         </div>
 
-                        <button class="scroll-arrow right-arrow in-progress-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Completed Section -->
-                <div class="tasks-section">
-                    <div class="section-header">
-                        <h2>Completed</h2>
-                        <div class="task-count" id="completedCount">0 tasks</div>
-                    </div>
-                    <div class="section-wrapper">
-                        <button class="scroll-arrow left-arrow completed-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6"/>
-                            </svg>
-                        </button>
-                        
-                        <div class="tasks-wrapper" id="completed-tasks">
-                            <!-- Tasks will be populated dynamically -->
+                        <div class="analytics-card">
+                            <h3>Priority Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="priorityChart"></canvas>
+                            </div>
                         </div>
 
-                        <button class="scroll-arrow right-arrow completed-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Overdue Section -->
-                <div class="tasks-section">
-                    <div class="section-header">
-                        <h2>Overdue</h2>
-                        <div class="task-count" id="overdueCount">0 tasks</div>
-                    </div>
-                    <div class="section-wrapper">
-                        <button class="scroll-arrow left-arrow overdue-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M15 18l-6-6 6-6"/>
-                            </svg>
-                        </button>
-                        
-                        <div class="tasks-wrapper" id="overdue-tasks">
-                            <!-- Tasks will be populated dynamically -->
+                        <div class="analytics-card">
+                            <h3>Status Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
                         </div>
 
-                        <button class="scroll-arrow right-arrow overdue-arrow" style="display: none;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 18l6-6-6-6"/>
-                            </svg>
-                        </button>
+                        <div class="analytics-card">
+                            <h3>Overdue Analysis</h3>
+                            <div class="chart-container">
+                                <canvas id="overdueChart"></canvas>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </section>
+
+                <!-- Productivity Metrics Section -->
+                <section class="analytics-section">
+                    <div class="section-header">
+                        <h2>Productivity Metrics</h2>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h3>Peak Performance Times</h3>
+                            <div class="chart-container">
+                                <canvas id="peakPerformanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="analytics-card">
+                            <h3>Task Categories</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="analytics-card">
+                            <h3>File Activity</h3>
+                            <div class="chart-container">
+                                <canvas id="fileActivityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="analytics-card">
+                            <h3>Task Load</h3>
+                            <div class="chart-container">
+                                <canvas id="taskLoadChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
     </div>
-
-    <!-- Template for task card -->
-    <template id="task-card-template">
-        <div class="title-section">
-            <h4 class="task-title"></h4>
-            <span class="priority-label"></span>
-            <span class="category-label"></span>
-        </div>
-        <div class="task-footer">
-            <div class="task-progress-section">
-                <div class="progress-header">
-                    <span class="progress-label"></span>
-                    <span class="progress-text"></span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
-                </div>
-            </div>
-            <div class="task-meta">
-                <span class="due-date"></span>
-            </div>
-        </div>
-    </template>
 
     <!-- Scripts -->
     <script src="{% static 'js/notifications.js' %}"></script>
     <script src="{% static 'js/dashboard.js' %}"></script>
-    <script src="{% static 'js/task-manager.js' %}"></script>
+    <script src="{% static 'js/analytics-manager.js' %}"></script>
     {% csrf_token %}
 </body>
 </html>

@@ -86,12 +86,8 @@
     font-weight: 500;
     color: var(--text-primary);
     margin: 0;
-    line-height: 0.5;
+    line-height: 1.5;
     flex: 1;
-}
-
-.task-priority {
-    margin-top: 0.25;
 }
 
 .priority-label {
@@ -102,9 +98,10 @@
 }
 
 .category-label {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+    color: #3699FF;
     line-height: 1;
+    text-transform: capitalize;
 }
 
 /* Menu Container */

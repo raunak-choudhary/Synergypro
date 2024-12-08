@@ -300,6 +300,56 @@
     border-radius: 8px;
 }
 
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.5s ease-out forwards;
+    background: #E7F6E7;
+    border-left: 4px solid #2E7D32;
+}
+
+.toast-success {
+    background: #E7F6E7;
+    border-left: 4px solid #2E7D32;
+    color: #1B5E20;
+}
+
+.toast-error {
+    background: #FFEBEE;
+    border-left: 4px solid #C62828;
+    color: #B71C1C;
+}
+
+.toast-icon {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+}
+.toast-message {
+    font-weight: 500;
+    font-size: 14px;
+    flex-grow: 1;
+}
+
+.toast-close {
+    cursor: pointer;
+    opacity: 0.7;
+    margin-left: 12px;
+}
+
 /* For images */
 .document-content img {
     border-radius: 8px;

@@ -21,7 +21,11 @@ def task_detail_view(request, task_id):
     task = get_object_or_404(Task, id=task_id)
     if task.user != request.user:
         raise PermissionDenied
-    return render(request, 'task_management/dashboard/task_detail.html', {'task': task})
+    categories = TaskCategory.objects.filter(user=request.user).order_by('name')
+    return render(request, 'task_management/dashboard/task_detail.html', {
+        'task': task,
+        'categories': categories
+    })
 
 @login_required
 def tasks_api(request):
@@ -38,6 +42,10 @@ def tasks_api(request):
         'priority': task.priority,
         'task_progress': task.task_progress,
         'is_overdue': task.is_overdue(),
+        'category': {
+            'id': task.category.id,
+            'name': task.category.name
+        } if hasattr(task, 'category') and task.category else None
     } for task in tasks]
     return JsonResponse(tasks_data, safe=False)
 
@@ -58,11 +66,16 @@ def task_detail_api(request, task_id):
             'priority': task.priority,
             'task_progress': task.task_progress,
             'file_count': task.file_count,
+            'category': {
+                'id': task.category.id,
+                'name': task.category.name
+            } if task.category else None
         })
     
     elif request.method == 'PUT':
         try:
             data = json.loads(request.body)
+            print("Received data:", data)
             task.title = data.get('title', task.title)
             task.description = data.get('description', task.description)
             task.start_date = data.get('start_date', task.start_date)
@@ -72,9 +85,34 @@ def task_detail_api(request, task_id):
             task.status = data.get('status', task.status)
             task.priority = data.get('priority', task.priority)
             task.task_progress = data.get('task_progress', task.task_progress)
+
+            category_id = data.get('category_id')
+            print("Category ID received:", category_id)
+
+            if category_id:
+                try:
+                    category = TaskCategory.objects.get(id=category_id, user=request.user)
+                    print("Found category:", category)  # Debug log
+                    task.category = category
+                except TaskCategory.DoesNotExist:
+                    print("Category not found")  # Debug log
+                    task.category = None
+            else:
+                print("No category ID provided")  # Debug log
+                task.category = None
+
             task.save()
-            return JsonResponse({'status': 'success'})
+            print("Task saved with category:", task.category)
+
+            return JsonResponse({
+                'status': 'success',
+                'category': {
+                    'id': task.category.id,
+                    'name': task.category.name
+                } if task.category else None
+            })
         except Exception as e:
+            print("Error saving task:", str(e))  # Debug log
             return JsonResponse({'error': str(e)}, status=400)
     
     elif request.method == 'DELETE':

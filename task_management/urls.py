@@ -1,6 +1,6 @@
 from django.urls import path, include
 from .views import auth_views, contact_views, dashboard_views
-from .views import calendar_views, task_views, help_views, settings_views, notification_views
+from .views import calendar_views, task_views, help_views, settings_views, notification_views, analytics_views
 
 urlpatterns = [
 
@@ -39,7 +39,7 @@ urlpatterns = [
         # Task Management URLs
         path('tasks/', task_views.tasks_view, name='tasks'),
         path('api/tasks/', task_views.tasks_api, name='tasks_api'),
-        path('task/<int:task_id>/', task_views.task_detail_view, name='task_detail'),  
+        path('task/<int:task_id>/', task_views.task_detail_view, name='task_detail'),
         path('api/tasks/<int:task_id>/', task_views.task_detail_api, name='task_detail_api'),
         path('api/tasks/<int:task_id>/comments/', task_views.task_comments_api, name='task_comments_api'),
         path('api/task/<int:task_id>/delete/', task_views.delete_task, name='delete_task'),
@@ -74,10 +74,14 @@ urlpatterns = [
 
         # Notification URLs
         path('api/notifications/', include([
-        path('', notification_views.get_notifications, name='get_notifications'),
-        path('mark-read/<int:notification_id>/', notification_views.mark_notification_read, name='mark_notification_read'),
-        path('mark-all-read/', notification_views.mark_all_read, name='mark_all_read'),
-        path('clear/', notification_views.clear_notifications, name='clear_notifications'),
-        path('create/', notification_views.create_notification, name='create_notification'),
-    ])),
+            path('', notification_views.get_notifications, name='get_notifications'),
+            path('mark-read/<int:notification_id>/', notification_views.mark_notification_read, name='mark_notification_read'),
+            path('mark-all-read/', notification_views.mark_all_read, name='mark_all_read'),
+            path('clear/', notification_views.clear_notifications, name='clear_notifications'),
+            path('create/', notification_views.create_notification, name='create_notification'),
+        ])),
+
+        #Analytic URLs
+        path('analytics/', analytics_views.analytics_view, name='analytics'),
+        path('api/analytics/dashboard-data/', analytics_views.analytics_data, name='analytics_data'),
 ]

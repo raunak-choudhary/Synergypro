@@ -309,23 +309,19 @@ class TaskManager {
     }
 
     createTaskCard(task) {
+        console.log('Creating task card for:', task);
+        
         const taskCard = document.createElement('div');
         taskCard.className = 'task-card';
         taskCard.dataset.taskId = task.id;
     
-        const categoryHTML = task.category ? this.generateCategoryHTML(task.category) : '';
-    
-        // Get user data from the profile dropdown in header
-        const profileDropdown = document.getElementById('profileDropdown');
-        const headerAvatar = profileDropdown.querySelector('.avatar-img');
-        const avatarSrc = headerAvatar.src; // This will get the already processed image URL
-    
-        taskCard.innerHTML = `
-            <div class="task-header">
+        // Add a unique identifier to the JS-generated template
+        const template = `
+            <div class="task-header" data-source="js-template">
                 <div class="title-section">
-                    <h3 class="task-title">${task.title}</h3>
-                    <span class="priority-label">${task.priority} &#8226; </span>
-                    <span class="category-label">Category</span>
+                    <h4 class="task-title">${task.title}</h4>
+                    <span class="priority-label">${task.priority} •</span>
+                    <span class="category-label">${task.category ? task.category.name : 'No Category'}</span>
                 </div>
                 <div class="menu-container">
                     <button class="menu-dots">⋮</button>
@@ -349,17 +345,43 @@ class TaskManager {
                 <div class="task-meta">
                     ${this.formatTaskDate(task.end_date, task.status)}
                     <div class="task-members">
-                        <img src="${avatarSrc}"
-                            alt="User" 
-                            class="member-avatar"
-                        />
+                        <img src="${this.getCurrentUserAvatar()}" alt="User" class="member-avatar" />
                     </div>
                 </div>
             </div>
         `;
+        
+        // Log the generated HTML before insertion
+        console.log('Generated template:', template);
+        
+        taskCard.innerHTML = template;
+
+        taskCard.addEventListener('click', () => {
+            window.location.href = `/task/${task.id}/`;
+        });
     
-        this.attachTaskCardListeners(taskCard, task.id);
+        // After insertion, verify the DOM structure
+        console.log('Actual DOM structure:', taskCard.innerHTML);
+        
+        // Log computed styles
+        const titleSection = taskCard.querySelector('.title-section');
+        if (titleSection) {
+            const computedStyle = window.getComputedStyle(titleSection);
+            console.log('Title section computed styles:', {
+                display: computedStyle.display,
+                flexDirection: computedStyle.flexDirection,
+                gap: computedStyle.gap,
+                marginBottom: computedStyle.marginBottom
+            });
+        }
+    
         return taskCard;
+    }
+
+    getCurrentUserAvatar() {
+        const profileDropdown = document.getElementById('profileDropdown');
+        const headerAvatar = profileDropdown?.querySelector('.avatar-img');
+        return headerAvatar ? headerAvatar.src : '';
     }
 
     attachTaskCardListeners(taskCard, taskId) {
@@ -466,15 +488,6 @@ class TaskManager {
             </div>`;
     }
 
-    generateCategoryHTML(category) {
-        const colors = this.generatePastelColor(category.name);
-        return `
-            <div class="category-tag" style="background-color: ${colors.background}; color: ${colors.text}">
-                ${category.name}
-            </div>
-        `;
-    }
-
     generatePastelColor(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
@@ -543,3 +556,4 @@ class TaskManager {
 document.addEventListener('DOMContentLoaded', () => {
     window.taskManager = new TaskManager();
 });
+

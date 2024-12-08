@@ -348,7 +348,18 @@ class TaskDetailManager {
                 progressBar.value = task.task_progress || 0;
                 progressValue.textContent = `${task.task_progress || 0}%`;
             }
-            
+
+            const categorySelect = document.getElementById('taskCategory');
+            if (categorySelect) {
+                if (task.category) {
+                    categorySelect.value = task.category.id;
+                    // Store the last value
+                    categorySelect.dataset.lastValue = task.category.id;
+                } else {
+                    categorySelect.value = '';
+                    categorySelect.dataset.lastValue = '';
+                }
+            }
             // Disable all fields initially
             this.disableEditing();
             
@@ -444,6 +455,7 @@ class TaskDetailManager {
         }
     
         const taskData = this.getFormData();
+        console.log('Saving task with data:', taskData);
     
         try {
             // First save the task details
@@ -457,8 +469,13 @@ class TaskDetailManager {
             });
     
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json();
+                console.error('Error response:', errorData); // Debug log
+                throw new Error(errorData.error || 'Failed to save task');
             }
+
+            const data = await response.json();
+            console.log('Save response:', data);
     
             // If there's a file selected, upload it
             if (this.fileInput.files.length > 0) {
@@ -506,21 +523,26 @@ class TaskDetailManager {
     }
 
     getFormData() {
-        const form = document.getElementById('taskDetailForm');
-        const selectedPriority = document.querySelector('.priority-btn.selected');
-        const selectedStatus = document.querySelector('.status-btn.selected');
+        const categorySelect = document.getElementById('taskCategory');
+        const categoryId = categorySelect ? categorySelect.value : null;
+    
+        console.log('Category ID being sent:', categoryId);
         
-        return {
+        const formData = {
             title: document.getElementById('taskTitle')?.value,
             description: document.getElementById('taskDescription')?.value,
             start_date: document.getElementById('startDate')?.value,
             start_time: document.getElementById('startTime')?.value,
             end_date: document.getElementById('endDate')?.value,
             end_time: document.getElementById('endTime')?.value,
-            priority: selectedPriority?.getAttribute('data-value'),
-            status: selectedStatus?.getAttribute('data-value'),
-            task_progress: document.getElementById('taskProgress')?.value || 0
+            priority: document.querySelector('.priority-btn.selected')?.getAttribute('data-value'),
+            status: document.querySelector('.status-btn.selected')?.getAttribute('data-value'),
+            task_progress: document.getElementById('taskProgress')?.value || 0,
+            category_id: categoryId && categoryId !== '' ? parseInt(categoryId) : null
         };
+        
+        console.log('Form data being sent:', formData);
+        return formData;
     }
 
     showDeleteModal() {

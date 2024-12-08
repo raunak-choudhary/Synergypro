@@ -5,6 +5,19 @@ from datetime import time
 
 User = get_user_model()
 
+class TaskCategory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Prevent duplicate category names per user
+    class Meta:
+        ordering = ['name']
+        unique_together = ['user', 'name']  
+        
+    def __str__(self):
+        return self.name
+
 class Task(models.Model):
     STATUS_CHOICES = [
         ('yet_to_start', 'Yet to Start'),
@@ -21,6 +34,7 @@ class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True)
     
     start_date = models.DateField(default=timezone.now)
     start_time = models.TimeField(default=time(0, 0))
@@ -34,6 +48,7 @@ class Task(models.Model):
     task_progress = models.IntegerField(default=0)
     task_owner = models.CharField(max_length=150)
     file_count = models.IntegerField(default=0)
+    
     
     def is_overdue(self):
         today = timezone.now().date()
@@ -91,17 +106,4 @@ class TaskFile(models.Model):
 
     class Meta:
         ordering = ['-uploaded_at']
-
-class TaskCategory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    # Prevent duplicate category names per user
-    class Meta:
-        ordering = ['name']
-        unique_together = ['user', 'name']  
-        
-    def __str__(self):
-        return self.name
 
