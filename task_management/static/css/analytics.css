@@ -1,17 +1,17 @@
 /* analytics.css */
 
 :root {
-    --black: #000000;
-    --dark-navy: #14141f;
-    --deep-purple: #2B1B50;
-    --rich-purple: #4B1B7F;
-    --bright-purple: #9B2F93;
-    --pink: #FF6B97;
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --card-bg: rgba(26, 26, 46, 0.7);
-    --card-bg-hover: rgba(43, 27, 80, 0.7);
+    --black: #1a1a2e;
+    --dark-navy: #f0f0f0;
+    --deep-purple: #e0e0e0;
+    --rich-purple: #5b2b8f;
+    --bright-purple: #ab3fa3;
+    --pink: #ff6b97;
+    --text-primary: #333333;
+    --text-secondary: rgba(0, 0, 0, 0.7);
+    --border-color: rgba(0, 0, 0, 0.1);
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --card-bg-hover: rgba(255, 255, 255, 0.9);
 }
 
 /* Dashboard Container */
@@ -81,7 +81,7 @@
 
 /* Analytics Cards */
 .analytics-card {
-    background: rgba(26, 26, 46, 0.7);
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
@@ -92,7 +92,7 @@
 .analytics-card:hover {
     transform: translateY(-3px);
     background: var(--card-bg-hover);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Card Headers */
@@ -122,7 +122,7 @@
     height: 300px;
     width: 100%;
     margin-top: 1.5rem;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(0, 0, 0, 0.02);
     border-radius: 8px;
     padding: 1rem;
 }
@@ -142,7 +142,7 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: 20px;
 }
 
@@ -155,7 +155,7 @@
 
 /* Chart Tooltips */
 .chartjs-tooltip {
-    background: rgba(26, 26, 46, 0.95) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
     backdrop-filter: blur(4px);
     border: 1px solid var(--border-color) !important;
     border-radius: 8px !important;
@@ -216,7 +216,8 @@
     }
 }
 
-/* Dark Theme Chart Customization */
+/* Light Theme Chart Customization */
 canvas {
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
+
