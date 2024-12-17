@@ -1,38 +1,10 @@
 /* analytics.css */
 
-:root {
-    --black: #1a1a2e;
-    --dark-navy: #f0f0f0;
-    --deep-purple: #e0e0e0;
-    --rich-purple: #5b2b8f;
-    --bright-purple: #ab3fa3;
-    --pink: #ff6b97;
-    --text-primary: #333333;
-    --text-secondary: rgba(0, 0, 0, 0.7);
-    --border-color: rgba(0, 0, 0, 0.1);
-    --card-bg: rgba(255, 255, 255, 0.8);
-    --card-bg-hover: rgba(255, 255, 255, 0.9);
-}
-
-/* Dashboard Container */
-.dashboard-container {
-    display: flex;
-    min-height: 100vh;
-    background: var(--dark-navy);
-}
-
-/* Main Content Area */
-.main-content {
-    flex: 1;
-    padding: 20px;
-    background: var(--dark-navy);
-    margin-left: 240px;
-}
+/* Only keeping analytics-specific styles and removing duplicates from dashboard.css */
 
 /* Analytics Container */
 .analytics-container {
-    padding: 20px;
-    background: var(--dark-navy);
+    padding: 32px;
 }
 
 /* Main Section Styling */
@@ -45,12 +17,12 @@
 }
 
 /* Section Headers */
-.section-header {
+.analytics-section .section-header {
     margin-bottom: 3rem;
     text-align: center;
 }
 
-.section-header h2 {
+.analytics-section .section-header h2 {
     font-size: 2.5rem;
     font-weight: 700;
     color: var(--text-primary);
@@ -59,7 +31,7 @@
     position: relative;
 }
 
-.section-header h2::after {
+.analytics-section .section-header h2::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -183,7 +155,7 @@
         gap: 1.5rem;
     }
 
-    .section-header h2 {
+    .analytics-section .section-header h2 {
         font-size: 2rem;
     }
 
@@ -202,7 +174,7 @@
         margin-bottom: 2rem;
     }
 
-    .section-header h2 {
+    .analytics-section .section-header h2 {
         font-size: 1.75rem;
     }
 
@@ -216,8 +188,7 @@
     }
 }
 
-/* Light Theme Chart Customization */
-canvas {
+/* Chart Customization */
+.analytics-section canvas {
     filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
-

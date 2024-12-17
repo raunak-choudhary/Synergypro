@@ -283,9 +283,16 @@ body {
 }
 
 .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
     text-align: center;
-    padding: 2rem;
     color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
 }
 
 .notifications-list {
@@ -418,11 +425,6 @@ body {
     color: var(--text-primary);
 }
 
-.stat-trend {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
 /* Welcome Message Styles */
 .welcome-message {
     display: flex;
@@ -533,7 +535,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .task-card:hover {
@@ -553,18 +555,11 @@ body {
     gap: 1rem;
 }
 
-.task-number {
-    font-size: 2.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
 .progress-container {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 .progress-bar {
@@ -581,7 +576,12 @@ body {
         var(--rich-purple),
         var(--bright-purple)
     );
-    transition: width 0.3s ease;
+    width: var(--progress-width, 0%);
+    transition: width 1s ease-in-out;
+}
+
+.task-stats .progress-container {
+    margin-top: 1rem;
 }
 
 .total-tasks {
@@ -589,18 +589,104 @@ body {
     font-size: 0.875rem;
 }
 
-/* Upcoming Task Specific Styles */
-.task-info {
-    display: flex;
-    gap: 1rem;
+.task-card.clickable {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-card.clickable:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.task-card.clickable:hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+        rgba(91, 43, 143, 0.05) 0%,
+        rgba(171, 63, 163, 0.05) 100%
+    );
+    border-radius: 12px;
+}
+
+/* Loading State Styles */
+.loading-skeleton {
+    background: linear-gradient(90deg,
+        var(--card-bg) 0%,
+        var(--card-bg-hover) 50%,
+        var(--card-bg) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.task-card.loading h3 {
+    width: 120px;
+    height: 24px;
+    background: var(--card-bg-hover);
+}
+
+.task-card.loading .task-info {
+    height: 60px;
+    background: var(--card-bg-hover);
     margin-bottom: 1rem;
 }
 
-.task-image {
-    width: 80px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
+.task-card.loading .progress-bar {
+    background: var(--card-bg-hover);
+}
+
+/* Priority Labels */
+.priority-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    width: fit-content;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.priority-label.high {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.priority-label.medium {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: rgb(245, 158, 11);
+}
+
+.priority-label.low {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: rgb(16, 185, 129);
+}
+
+
+/* Upcoming Task Specific Styles */
+.task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.task-info h4 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-primary);
 }
 
 .task-details {
@@ -618,6 +704,20 @@ body {
 .task-type {
     color: var(--text-secondary);
     font-size: 0.875rem;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+}
+
+.task-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
 }
 
 .progress-info {
@@ -680,6 +780,8 @@ body {
 }
 
 .verification-ring {
+    width: 36px;
+    height: 36px;
     position: absolute;
     top: -2px;
     left: -2px;
@@ -688,6 +790,7 @@ body {
     border-radius: 50%;
     border: 2px solid transparent;
     pointer-events: none;
+    z-index: 2;
 }
 
 .verification-ring.verified {
@@ -711,7 +814,7 @@ body {
     justify-content: center;
     font-size: 10px;
     color: #000;
-    z-index: 2;
+    z-index: 3;
     border: 2px solid var(--card-bg);
 }
 
