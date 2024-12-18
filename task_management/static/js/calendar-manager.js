@@ -16,6 +16,8 @@ class CalendarManager {
             this.initializeHeaderComponents();
             this.initializeTaskModal();
         }
+
+        window.addEventListener('resize', () => this.handleResize());
     }
 
     initializeCalendar() {
@@ -420,9 +422,10 @@ class CalendarManager {
         if (!calendarGrid) return;
         
         calendarGrid.innerHTML = '';
-        calendarGrid.style.height = 'calc(100vh - 300px)';
-        
-        // Create main container
+        calendarGrid.style.display = 'flex';
+        calendarGrid.style.flexDirection = 'column';
+        calendarGrid.style.flex = '1';
+
         const weekContainer = document.createElement('div');
         weekContainer.className = 'week-grid-container';
         
@@ -437,7 +440,8 @@ class CalendarManager {
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(startOfWeek);
             currentDate.setDate(startOfWeek.getDate() + i);
-            weekContainer.appendChild(this.createDayColumn(currentDate));
+            const dayColumn = this.createDayColumn(currentDate);
+            weekContainer.appendChild(dayColumn);
         }
         
         calendarGrid.appendChild(weekContainer);
@@ -455,7 +459,7 @@ class CalendarManager {
         // Time slots
         for (let hour = 0; hour < 24; hour++) {
             const timeSlot = document.createElement('div');
-            timeSlot.className = 'time-slot';
+            timeSlot.className = 'hour-slot';
             timeSlot.textContent = `${hour.toString().padStart(2, '0')}:00`;
             timeColumn.appendChild(timeSlot);
         }
@@ -857,6 +861,13 @@ class CalendarManager {
             });
         }
     }
+
+    handleResize() {
+        if (this.currentView === 'week') {
+            this.adjustHourSlotHeight();
+        }
+    }
+
 }
 
 // Initialize on DOM load

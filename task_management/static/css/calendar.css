@@ -790,3 +790,41 @@ input[type="time"]::-webkit-calendar-picker-indicator:hover {
     }
 }
 
+.calendar-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    margin: 20px;
+    padding: 20px;
+}
+
+.week-grid-container {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    min-height: 0;
+}
+
+.day-column {
+    display: grid;
+    grid-template-rows: 60px repeat(24, minmax(60px, auto));
+    border-right: 1px solid var(--border-color);
+    min-width: 120px;
+}
+
+.hour-slot {
+    border-bottom: 1px solid var(--border-color);
+    padding: 4px;
+    min-height: 60px;
+}
+
+.time-column {
+    position: sticky;
+    left: 0;
+    background: var(--card-bg);
+    z-index: 2;
+    border-right: 1px solid var(--border-color);
+}
