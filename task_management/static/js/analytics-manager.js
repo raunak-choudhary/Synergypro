@@ -303,6 +303,10 @@ class AnalyticsManager {
                     title: {
                         display: true,
                         text: yAxisLabel
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
                     }
                 }
             },
@@ -343,6 +347,10 @@ class AnalyticsManager {
                     title: {
                         display: true,
                         text: yAxisLabel
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
                     }
                 }
             }

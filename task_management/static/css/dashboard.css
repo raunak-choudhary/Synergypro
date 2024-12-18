@@ -308,6 +308,7 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 12px;
+    position: relative;
 }
 
 .notification-item:last-child {

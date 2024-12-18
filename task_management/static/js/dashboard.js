@@ -1,5 +1,6 @@
 class DashboardManager {
     constructor() {
+        this.setupCSRFToken();
         this.initializeElements();
         this.attachEventListeners();
         this.initializeVerificationStatus();
@@ -248,6 +249,24 @@ class DashboardManager {
         setTimeout(() => {
             notification.remove();
         }, 5000);
+    }
+
+    setupCSRFToken() {
+        // Create and add CSRF token input if it doesn't exist
+        if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+            const csrfToken = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+
+            if (csrfToken) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = 'csrfmiddlewaretoken';
+                tokenInput.value = csrfToken;
+                document.body.appendChild(tokenInput);
+            }
+        }
     }
 }
 
