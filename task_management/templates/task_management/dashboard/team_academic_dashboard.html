@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Individual Freelancer Dashboard - SynergyPro</title>
+    <title>Team Academic Dashboard - SynergyPro</title>
     <link rel="icon" href="{% static 'images/logo_title.png' %}" type="image/png">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
@@ -24,7 +24,7 @@
                     class="nav-item active" 
                     data-user-type="{{ user.user_type }}" 
                     data-profile-type="{{ user.profile_type }}"
-                    onclick="return handleOverviewClick(this);">
+                    onclick="return handleTeamOverviewClick(this);">
                     <span class="nav-icon">📊</span>
                     Overview
                 </a>
@@ -90,8 +90,8 @@
             <!-- Header -->
             <header class="dashboard-header">
                 <div class="welcome-message">
-                    <h1>Hi, {{ user.first_name }} {{ user.last_name }}</h1>
-                    <p>Let's deliver excellence to your clients today!</p>
+                    <h1>Hi, {{ team_name }}</h1>
+                    <p>Here's your Dashboard! Let's achieve our academic goals together!</p>
                 </div>
                 <div class="header-right">
                     <!-- Notifications Panel-->
@@ -155,29 +155,122 @@
                 <div class="stats-section">
                     <div class="stat-card">
                         <div class="stat-header">
-                            <span class="stat-title">Total Projects</span>
-                            <span class="stat-value">{{ total_tasks }}</span>
+                            <span class="stat-title">Team Members</span>
+                            <span class="stat-value" id="teamMembersCount">{{ team_members_count }}</span>
+                        </div>
+                    </div>
+                
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title">Total Tasks</span>
+                            <span class="stat-value" id="totalTasks">{{ total_tasks }}</span>
                         </div>
                     </div>
                 
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">In Progress</span>
-                            <span class="stat-value">{{ in_progress }}</span>
+                            <span class="stat-value" id="inProgressTasks">{{ in_progress }}</span>
                         </div>
                     </div>
                 
                     <div class="stat-card">
                         <div class="stat-header">
                             <span class="stat-title">Completed</span>
-                            <span class="stat-value">{{ completed }}</span>
+                            <span class="stat-value" id="completedTasks">{{ completed }}</span>
                         </div>
                     </div>
                 </div>
 
+                <div class="team-info-section">
+                    <!-- Team Members Panel -->
+                    <div class="team-members-panel">
+                        <div class="panel-header">
+                            <h3>Team Members</h3>
+                            {% if user.id == team_admin.id %}
+                            <button class="manage-team-btn" onclick="showManageTeamModal()">
+                                <span class="icon">👥</span> Manage Team
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="members-list">
+                            {% for member in team_members %}
+                            <div class="member-card">
+                                <div class="member-avatar">
+                                    {% if member.profile_image %}
+                                        <img src="{{ member.profile_image.url }}" alt="{{ member.get_full_name }}">
+                                    {% else %}
+                                        <img src="https://ui-avatars.com/api/?name={{ member.first_name }}+{{ member.last_name }}&background=4B1B7F&color=fff" alt="{{ member.get_full_name }}">
+                                    {% endif %}
+                                </div>
+                                <div class="member-info">
+                                    <span class="member-name">{{ member.get_full_name }}</span>
+                                    <span class="member-role">{{ member.profile_type|title }}</span>
+                                    {% if member.id == team_admin.id %}
+                                        <span class="admin-badge">Admin</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                
+                    <!-- Team Messages Panel -->
+                    <div class="team-messages-panel">
+                        <div class="panel-header">
+                            <h3>Team Messages</h3>
+                        </div>
+                        <div class="messages-container">
+                            <div class="messages-list" id="messagesList">
+                                <!-- Messages will be loaded here dynamically -->
+                            </div>
+                            <div class="message-input-container">
+                                <textarea id="messageInput" placeholder="Type your message..."></textarea>
+                                <button onclick="sendMessage()">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Management Modal (Only visible to admin) -->
+                {% if user.id == team_admin.id %}
+                <div id="manageTeamModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>Manage Team Members</h2>
+                            <span class="close-modal" onclick="closeManageTeamModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="add-member-section">
+                                <h3>Add New Member</h3>
+                                <div class="add-member-form">
+                                    <input type="email" id="newMemberEmail" placeholder="Enter member's email">
+                                    <button onclick="addTeamMember()">Add Member</button>
+                                </div>
+                            </div>
+                            <div class="current-members-section">
+                                <h3>Current Members</h3>
+                                <div class="current-members-list">
+                                    {% for member in team_members %}
+                                    <div class="member-item">
+                                        <span>{{ member.get_full_name }} ({{ member.email }})</span>
+                                        {% if member.id != team_admin.id %}
+                                        <button class="remove-member-btn" onclick="removeTeamMember('{{ member.id }}')">Remove</button>
+                                        {% else %}
+                                        <span class="admin-label">Admin</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Main Dashboard Grid -->
                 <div class="dashboard-grid">
-                    <!-- Projects Section -->
+                    <!-- Tasks Section -->
                     <section class="tasks-panel">
                         <!-- Content will be added here -->
                     </section>
@@ -188,12 +281,12 @@
                     </section>
                 </div>
                 
-                <!-- Project Cards -->
+                <!-- Task Cards -->
                 <div class="task-cards">
-                    <!-- Running Project -->
+                    <!-- Running Task -->
                     {% if first_task %}
                     <div class="task-card running" onclick="window.location.href='{% url 'task_detail' first_task.id %}'">
-                        <h3>Running Project</h3>
+                        <h3>Running Task</h3>
                         <div class="task-stats">
                             <div class="task-info">
                                 <h4>{{ first_task.title }}</h4>
@@ -210,9 +303,9 @@
                     </div>
                     {% endif %}
 
-                    <!-- Upcoming Project -->
+                    <!-- Upcoming Task -->
                     <div class="task-card upcoming" {% if second_task %}onclick="window.location.href='{% url 'tasks' %}'"{% endif %}>
-                        <h3>Upcoming Project</h3>
+                        <h3>Upcoming Task</h3>
                         {% if second_task %}
                         <div class="task-stats">
                             <div class="task-info">
@@ -229,7 +322,7 @@
                         </div>
                         {% else %}
                         <div class="task-stats empty-state">
-                            <p>NO MORE PROJECTS IN PIPELINE !!</p>
+                            <p>NO MORE TASKS IN PIPELINE !!</p>
                         </div>
                         {% endif %}
                     </div>

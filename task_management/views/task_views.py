@@ -29,7 +29,11 @@ def task_detail_view(request, task_id):
 
 @login_required
 def tasks_api(request):
-    tasks = Task.objects.filter(user=request.user).order_by('-created_at')
+    if request.user.user_type == 'team':
+        tasks = Task.objects.filter(team_name=request.user.team_name).order_by('-created_at')
+    else:
+        tasks = Task.objects.filter(user=request.user).order_by('-created_at')
+
     tasks_data = [{
         'id': task.id,
         'title': task.title,
@@ -42,10 +46,11 @@ def tasks_api(request):
         'priority': task.priority,
         'task_progress': task.task_progress,
         'is_overdue': task.is_overdue(),
+        'team_name': task.team_name if request.user.user_type == 'team' else None,
         'category': {
             'id': task.category.id,
             'name': task.category.name
-        } if hasattr(task, 'category') and task.category else None
+        } if task.category else None
     } for task in tasks]
     return JsonResponse(tasks_data, safe=False)
 

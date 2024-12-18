@@ -48,9 +48,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "task_management",
+    'channels',
+    'task_management',
     'phonenumber_field',
 ]
+
+ASGI_APPLICATION = 'synergypro.asgi.application'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -84,6 +87,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "synergypro.wsgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 
 # Database

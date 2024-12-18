@@ -1,9 +1,9 @@
 class TaskManager {
     constructor() {
-      this.initializeElements();
-      this.attachEventListeners();
-      this.initializeFilters();
-      this.fetchTasks();
+        this.initializeElements();
+        this.attachEventListeners();
+        this.initializeFilters();
+        this.fetchTasks();
     }
 
     initializeElements() {
@@ -206,19 +206,33 @@ class TaskManager {
 
     async fetchTasks() {
         try {
+            const userType = document.querySelector('.nav-item[data-user-type]')?.dataset.userType;
             const response = await fetch('/api/tasks/');
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            const data = await response.json();
+            const tasks = await response.json();
             
             // Clear existing tasks and counters
             this.clearAllTasks();
             
-            // Sort tasks into groups
-            this.sortTasks(data);
+            if (userType === 'team') {
+                // For team users, filter tasks by team_name
+                tasks.forEach(task => {
+                    if (task.status === 'completed') {
+                        this.taskGroups.completed.push(task);
+                    } else if (task.is_overdue) {
+                        this.taskGroups.overdue.push(task);
+                    } else {
+                        this.taskGroups.inProgress.push(task);
+                    }
+                });
+            } else {
+                // For individual users, tasks are already filtered by user
+                this.sortTasks(tasks);
+            }
             
             // Update task counts
             this.updateTaskCounts();
@@ -266,10 +280,17 @@ class TaskManager {
             }
         });
     
-        // Sort each group by due date
-        this.taskGroups.inProgress = this.sortTasksByDueDate(this.taskGroups.inProgress);
-        this.taskGroups.completed = this.sortTasksByDueDate(this.taskGroups.completed);
-        this.taskGroups.overdue = this.sortTasksByDueDate(this.taskGroups.overdue);
+        // Sort function that considers both date and time
+        const sortByDateTime = (a, b) => {
+            const dateA = new Date(`${a.end_date}T${a.end_time || '00:00'}`);
+            const dateB = new Date(`${b.end_date}T${b.end_time || '00:00'}`);
+            return dateA - dateB;
+        };
+    
+        // Sort each group
+        this.taskGroups.inProgress = this.taskGroups.inProgress.sort(sortByDateTime);
+        this.taskGroups.completed = this.taskGroups.completed.sort(sortByDateTime);
+        this.taskGroups.overdue = this.taskGroups.overdue.sort(sortByDateTime);
     }
 
     updateTaskCounts() {
@@ -364,13 +385,13 @@ class TaskManager {
                 </div>
             </div>
         `;
-        
+    
         taskCard.innerHTML = template;
 
         taskCard.addEventListener('click', () => {
             window.location.href = `/task/${task.id}/`;
         });
-        
+
         // Log computed styles
         const titleSection = taskCard.querySelector('.title-section');
         if (titleSection) {
@@ -438,7 +459,7 @@ class TaskManager {
 
     formatTaskDate(endDate, endTime, status) {
         if (!endDate) return '';
-
+        
         if (status === "completed") {
             return `
                 <div class="due-date completed">
@@ -449,7 +470,7 @@ class TaskManager {
                     Completed
                 </div>`;
         }
-
+        
         // Parse date and time separately
         const [year, month, day] = endDate.split('-');
         const [hours, minutes] = endTime.split(':');
@@ -467,7 +488,7 @@ class TaskManager {
 
         let dateContent;
         let className;
-
+    
         if (diffDays < 0 || diffHours < 0) {
             dateContent = `Overdue by ${Math.abs(diffDays+1)} days`;
             className = 'overdue';
@@ -484,7 +505,7 @@ class TaskManager {
             dateContent = `Due ${end.toLocaleString('default', { month: 'short' })} ${end.getDate()}`;
             className = 'future';
         }
-
+    
         return `
             <div class="due-date ${className}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

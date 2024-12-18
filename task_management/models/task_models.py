@@ -32,6 +32,7 @@ class Task(models.Model):
     ]
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    team_name = models.CharField(max_length=50, null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True)
@@ -49,6 +50,12 @@ class Task(models.Model):
     task_owner = models.CharField(max_length=150)
     file_count = models.IntegerField(default=0)
     
+
+    def save(self, *args, **kwargs):
+        # If user is part of team, automatically set team_name
+        if self.user.team_name:
+            self.team_name = self.user.team_name
+        super().save(*args, **kwargs)
     
     def is_overdue(self):
         today = timezone.now().date()
