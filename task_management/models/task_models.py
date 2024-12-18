@@ -52,9 +52,31 @@ class Task(models.Model):
     
 
     def save(self, *args, **kwargs):
-        # If user is part of team, automatically set team_name
+        if isinstance(self.task_progress, str):
+            self.task_progress = int(self.task_progress)
+
+        # Only update status based on progress if status isn't being explicitly changed
+        if 'update_status' not in kwargs:
+            if self.task_progress == 100:
+                self.status = 'completed'
+            elif self.task_progress == 0:
+                self.status = 'yet_to_start'
+            elif self.task_progress > 0:
+                self.status = 'in_progress'
+
+        # Only update progress based on status if progress isn't being explicitly changed
+        if 'update_progress' not in kwargs:
+            if self.status == 'completed':
+                self.task_progress = 100
+            elif self.status == 'yet_to_start':
+                self.task_progress = 0
+
         if self.user.team_name:
             self.team_name = self.user.team_name
+
+        # Remove custom kwargs before calling super()
+        kwargs.pop('update_status', None)
+        kwargs.pop('update_progress', None)
         super().save(*args, **kwargs)
     
     def is_overdue(self):
