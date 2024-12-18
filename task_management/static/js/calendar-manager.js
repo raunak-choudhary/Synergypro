@@ -32,6 +32,23 @@ class CalendarManager {
         this.updateCalendarView();
     }
 
+    switchView(view) {
+        this.currentView = view;
+        const calendarGrid = document.getElementById('calendarGrid');
+
+        // Clear existing content and styles
+        calendarGrid.innerHTML = '';
+        calendarGrid.className = '';
+
+        if (view === 'month') {
+            calendarGrid.classList.add('month-view');
+            this.renderMonthView();
+        } else {
+            calendarGrid.classList.add('week-view');
+            this.renderWeekView();
+        }
+    }
+
     // Calendar-specific methods from your original calendar.js
     updateCalendarHeader() {
         const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -422,9 +439,6 @@ class CalendarManager {
         if (!calendarGrid) return;
         
         calendarGrid.innerHTML = '';
-        calendarGrid.style.display = 'flex';
-        calendarGrid.style.flexDirection = 'column';
-        calendarGrid.style.flex = '1';
 
         const weekContainer = document.createElement('div');
         weekContainer.className = 'week-grid-container';
@@ -440,8 +454,7 @@ class CalendarManager {
         for (let i = 0; i < 7; i++) {
             const currentDate = new Date(startOfWeek);
             currentDate.setDate(startOfWeek.getDate() + i);
-            const dayColumn = this.createDayColumn(currentDate);
-            weekContainer.appendChild(dayColumn);
+            weekContainer.appendChild(this.createDayColumn(currentDate));
         }
         
         calendarGrid.appendChild(weekContainer);
@@ -450,11 +463,11 @@ class CalendarManager {
     createTimeColumn() {
         const timeColumn = document.createElement('div');
         timeColumn.className = 'time-column';
-        
-        // Empty header cell
-        const emptyHeader = document.createElement('div');
-        emptyHeader.className = 'week-day-header empty';
-        timeColumn.appendChild(emptyHeader);
+
+        // Add empty header
+        const headerCell = document.createElement('div');
+        headerCell.className = 'week-day-header empty';
+        timeColumn.appendChild(headerCell);
         
         // Time slots
         for (let hour = 0; hour < 24; hour++) {
@@ -489,8 +502,6 @@ class CalendarManager {
         for (let hour = 0; hour < 24; hour++) {
             const hourSlot = document.createElement('div');
             hourSlot.className = 'hour-slot';
-            hourSlot.setAttribute('data-hour', hour);
-            
             if (isToday && new Date().getHours() === hour) {
                 hourSlot.classList.add('current-hour');
             }
@@ -498,8 +509,6 @@ class CalendarManager {
             hourSlot.addEventListener('click', () => {
                 const selectedDateTime = new Date(date);
                 selectedDateTime.setHours(hour);
-                selectedDateTime.setMinutes(0);
-                selectedDateTime.setSeconds(0);
                 this.openTaskModal(selectedDateTime);
             });
     
